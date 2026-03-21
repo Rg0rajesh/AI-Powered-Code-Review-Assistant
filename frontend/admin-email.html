@@ -1,0 +1,1829 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <title>Email Center – LintVertex Admin</title>
+  <link rel="stylesheet" href="css/main.css" />
+  <style>
+    /* ══ Layout ══════════════════════════════════════════════ */
+    .ec-grid {
+      display: grid;
+      grid-template-columns: 260px 1fr;
+      gap: 0;
+      height: calc(100vh - 64px - 2rem);
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+    }
+
+    @media(max-width:900px) {
+      .ec-grid {
+        grid-template-columns: 1fr;
+        height: auto;
+      }
+    }
+
+    /* ══ Left Sidebar ════════════════════════════════════════ */
+    .ec-sidebar {
+      background: var(--bg-secondary);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .ec-sidebar-header {
+      padding: 1.25rem 1rem 0.875rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .ec-sidebar-title {
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--text-muted);
+      margin-bottom: 0.75rem;
+    }
+
+    .compose-btn {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.625rem 0.875rem;
+      background: var(--accent);
+      color: var(--bg-primary);
+      border: none;
+      border-radius: var(--radius-md);
+      font-family: var(--font-ui);
+      font-size: 0.82rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all var(--transition);
+    }
+
+    .compose-btn:hover {
+      opacity: 0.9;
+      transform: translateY(-1px);
+    }
+
+    .ec-nav {
+      list-style: none;
+      padding: 0.5rem 0.5rem;
+      flex: 1;
+      overflow-y: auto;
+    }
+
+    .ec-nav li+li {
+      margin-top: 0.15rem;
+    }
+
+    .ec-nav-item {
+      display: flex;
+      align-items: center;
+      gap: 0.625rem;
+      padding: 0.5rem 0.75rem;
+      border-radius: var(--radius-sm);
+      font-size: 0.82rem;
+      font-weight: 500;
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all var(--transition);
+      user-select: none;
+    }
+
+    .ec-nav-item:hover {
+      background: var(--accent-light);
+      color: var(--text-primary);
+    }
+
+    .ec-nav-item.active {
+      background: var(--accent-light);
+      color: var(--accent);
+      font-weight: 700;
+      border-left: 3px solid var(--accent);
+      padding-left: calc(0.75rem - 3px);
+    }
+
+    .ec-nav-icon {
+      font-size: 1rem;
+      flex-shrink: 0;
+      width: 20px;
+      text-align: center;
+    }
+
+    .ec-count {
+      margin-left: auto;
+      font-size: 0.65rem;
+      font-weight: 700;
+      padding: 0.15rem 0.5rem;
+      background: var(--accent);
+      color: var(--bg-primary);
+      border-radius: 100px;
+    }
+
+    .ec-divider {
+      height: 1px;
+      background: var(--border);
+      margin: 0.5rem 0.75rem;
+    }
+
+    .ec-stat-row {
+      padding: 0.75rem 1rem;
+      border-top: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      gap: 0.375rem;
+    }
+
+    .ec-stat-item {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.72rem;
+      color: var(--text-muted);
+    }
+
+    .ec-stat-item strong {
+      color: var(--text-primary);
+    }
+
+    /* ══ Right Content ═══════════════════════════════════════ */
+    .ec-content {
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .ec-toolbar {
+      padding: 0.875rem 1.25rem;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      background: var(--bg-card);
+      flex-wrap: wrap;
+    }
+
+    .ec-toolbar-title {
+      font-size: 0.95rem;
+      font-weight: 700;
+    }
+
+    .ec-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1.25rem;
+    }
+
+    /* ══ Panels (toggled by nav) ══════════════════════════════ */
+    .ec-panel {
+      display: none;
+    }
+
+    .ec-panel.active {
+      display: block;
+    }
+
+    /* ══ Compose ════════════════════════════════════════════= */
+    .compose-layout {
+      display: grid;
+      grid-template-columns: 1fr 380px;
+      gap: 1.25rem;
+    }
+
+    @media(max-width:1100px) {
+      .compose-layout {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Recipient type selector */
+    .rcpt-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+
+    @media(max-width:800px) {
+      .rcpt-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    .rcpt-card {
+      padding: 0.625rem 0.5rem;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-md);
+      background: var(--bg-card);
+      cursor: pointer;
+      text-align: center;
+      transition: all var(--transition);
+      font-family: var(--font-ui);
+    }
+
+    .rcpt-card:hover {
+      border-color: var(--accent);
+    }
+
+    .rcpt-card.active {
+      border-color: var(--accent);
+      background: var(--accent-light);
+    }
+
+    .rcpt-card .icon {
+      font-size: 1.25rem;
+      display: block;
+      margin-bottom: 0.25rem;
+    }
+
+    .rcpt-card .label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--text-secondary);
+    }
+
+    .rcpt-card.active .label {
+      color: var(--accent);
+    }
+
+    /* Email type chips */
+    .type-chips {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      margin-bottom: 1rem;
+    }
+
+    .type-chip {
+      padding: 0.375rem 0.875rem;
+      border: 1.5px solid var(--border);
+      border-radius: 100px;
+      background: var(--bg-card);
+      cursor: pointer;
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      font-family: var(--font-ui);
+      transition: all var(--transition);
+    }
+
+    .type-chip:hover {
+      border-color: var(--accent);
+    }
+
+    .type-chip.active {
+      border-color: var(--accent);
+      background: var(--accent-light);
+      color: var(--accent);
+    }
+
+    /* Live preview */
+    .preview-card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      position: sticky;
+      top: 0;
+    }
+
+    .preview-header {
+      padding: 0.625rem 1rem;
+      background: var(--bg-card);
+      border-bottom: 1px solid var(--border);
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .preview-body {
+      padding: 1rem;
+      max-height: 500px;
+      overflow-y: auto;
+      font-family: 'Segoe UI', sans-serif;
+      font-size: 0.82rem;
+      line-height: 1.65;
+      background: white;
+      color: #333;
+    }
+
+    [data-theme="dark"] .preview-body {
+      background: #111;
+      color: #ccc;
+    }
+
+    .preview-body h2 {
+      font-size: 0.9rem;
+      font-weight: 700;
+      margin: 1rem 0 0.4rem;
+      border-bottom: 1px solid #eee;
+      padding-bottom: 0.3rem;
+    }
+
+    .preview-body p {
+      margin-bottom: 0.7rem;
+      color: #555;
+    }
+
+    [data-theme="dark"] .preview-body h2 {
+      border-bottom-color: #222;
+      color: #eee;
+    }
+
+    [data-theme="dark"] .preview-body p {
+      color: #aaa;
+    }
+
+    /* ══ CSV Section ══════════════════════════════════════════ */
+    .csv-drop-zone {
+      border: 2px dashed var(--border);
+      border-radius: var(--radius-lg);
+      padding: 2.5rem;
+      text-align: center;
+      cursor: pointer;
+      transition: all var(--transition);
+      background: var(--bg-secondary);
+      position: relative;
+    }
+
+    .csv-drop-zone:hover,
+    .csv-drop-zone.drag-over {
+      border-color: var(--accent);
+      background: var(--accent-light);
+    }
+
+    .csv-drop-zone input[type="file"] {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      cursor: pointer;
+      width: 100%;
+      height: 100%;
+    }
+
+    .csv-icon {
+      font-size: 3rem;
+      margin-bottom: 0.875rem;
+      display: block;
+    }
+
+    .csv-preview-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.78rem;
+      margin-top: 1rem;
+    }
+
+    .csv-preview-table th {
+      text-align: left;
+      padding: 0.5rem 0.75rem;
+      background: var(--bg-secondary);
+      font-size: 0.68rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .csv-preview-table td {
+      padding: 0.5rem 0.75rem;
+      border-bottom: 1px solid var(--border);
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+    }
+
+    .csv-preview-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .csv-stats-bar {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      padding: 0.875rem 1rem;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      margin-bottom: 1rem;
+    }
+
+    .csv-stat {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .csv-stat-n {
+      font-size: 1.5rem;
+      font-weight: 800;
+      font-family: var(--font-mono);
+      color: var(--text-primary);
+      line-height: 1;
+    }
+
+    .csv-stat-l {
+      font-size: 0.65rem;
+      color: var(--text-muted);
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-top: 0.2rem;
+    }
+
+    /* ══ Sent History ════════════════════════════════════════ */
+    .sent-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 1rem;
+      padding: 1rem 1.25rem;
+      border-bottom: 1px solid var(--border);
+      transition: background var(--transition);
+    }
+
+    .sent-item:hover {
+      background: var(--accent-light);
+    }
+
+    .sent-item:last-child {
+      border-bottom: none;
+    }
+
+    .sent-icon {
+      width: 38px;
+      height: 38px;
+      border-radius: var(--radius-md);
+      background: var(--accent-light);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.1rem;
+      flex-shrink: 0;
+      border: 1px solid var(--glass-border);
+    }
+
+    .sent-subject {
+      font-size: 0.875rem;
+      font-weight: 700;
+      margin-bottom: 0.15rem;
+    }
+
+    .sent-meta {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+    }
+
+    .sent-badge {
+      margin-left: auto;
+      font-size: 0.65rem;
+      font-weight: 700;
+      padding: 0.2rem 0.625rem;
+      border-radius: 100px;
+      background: var(--accent-light);
+      color: var(--accent);
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    /* ══ Feedback Replies ════════════════════════════════════ */
+    .fb-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      margin-bottom: 1rem;
+      overflow: hidden;
+      transition: box-shadow var(--transition);
+    }
+
+    .fb-card:hover {
+      box-shadow: var(--shadow-sm);
+    }
+
+    .fb-card-header {
+      padding: 0.875rem 1.1rem;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      background: var(--bg-secondary);
+    }
+
+    .fb-avatar {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: var(--accent-light);
+      border: 1.5px solid var(--accent);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.8rem;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+
+    .fb-user-name {
+      font-size: 0.875rem;
+      font-weight: 700;
+    }
+
+    .fb-user-email {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+    }
+
+    .fb-rating {
+      margin-left: auto;
+      font-size: 0.875rem;
+    }
+
+    .fb-card-body {
+      padding: 1rem 1.1rem;
+    }
+
+    .fb-text {
+      font-size: 0.82rem;
+      color: var(--text-secondary);
+      font-style: italic;
+      border-left: 3px solid var(--accent);
+      padding-left: 0.875rem;
+      margin-bottom: 1rem;
+      line-height: 1.6;
+    }
+
+    /* ══ Schedule ════════════════════════════════════════════ */
+    .schedule-row {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.875rem 1rem;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      margin-bottom: 0.625rem;
+      transition: all var(--transition);
+    }
+
+    .schedule-row:hover {
+      border-color: var(--accent);
+    }
+
+    .schedule-time {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      min-width: 140px;
+    }
+
+    .schedule-sub {
+      font-size: 0.82rem;
+      font-weight: 600;
+      flex: 1;
+    }
+
+    .schedule-rcpt {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+    }
+
+    /* ══ Send Result Banner ══════════════════════════════════ */
+    .send-result {
+      display: none;
+      padding: 0.875rem 1.1rem;
+      border-radius: var(--radius-md);
+      margin-top: 1rem;
+      font-size: 0.875rem;
+    }
+
+    .send-result.ok {
+      background: rgba(39, 174, 96, 0.1);
+      border: 1px solid var(--success);
+      color: var(--success);
+    }
+
+    .send-result.err {
+      background: rgba(192, 57, 43, 0.1);
+      border: 1px solid var(--error);
+      color: var(--error);
+    }
+
+    /* ══ Template Selector ══════════════════════════════════= */
+    .template-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+    }
+
+    @media(max-width:700px) {
+      .template-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    .template-card {
+      padding: 1rem;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      transition: all var(--transition);
+      background: var(--bg-card);
+      text-align: center;
+    }
+
+    .template-card:hover {
+      border-color: var(--accent);
+      transform: translateY(-2px);
+    }
+
+    .template-card.active {
+      border-color: var(--accent);
+      background: var(--accent-light);
+    }
+
+    .template-card .t-icon {
+      font-size: 1.75rem;
+      display: block;
+      margin-bottom: 0.4rem;
+    }
+
+    .template-card .t-name {
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .template-card .t-desc {
+      font-size: 0.68rem;
+      color: var(--text-muted);
+      margin-top: 0.2rem;
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- ══ NAVBAR ══ -->
+  <nav class="navbar">
+    <a href="/index.html" class="logo-text">Lint<span>Vertex</span></a>
+    <div style="display:flex;align-items:center;gap:0.75rem">
+      <a href="/admin.html" class="btn btn-ghost btn-sm">← Admin</a>
+      <div class="theme-toggle"><span class="theme-label">☀️</span><button class="toggle-track">
+          <div class="toggle-thumb"></div>
+        </button></div>
+
+      <a href="/notifications.html" class="notif-bell logged-in-only" data-notif-count="0" title="Notifications">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+        </svg>
+        <span class="notif-badge" style="display:none">0</span>
+      </a>
+
+      <button class="btn btn-danger btn-sm" onclick="adminLogout()">🔒 End Session</button>
+    </div>
+  </nav>
+
+  <div class="layout">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <ul class="sidebar-nav">
+        <li><a href="/dashboard.html"><svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="2">
+              <rect x="3" y="3" width="7" height="7" />
+              <rect x="14" y="3" width="7" height="7" />
+              <rect x="3" y="14" width="7" height="7" />
+              <rect x="14" y="14" width="7" height="7" />
+            </svg>Dashboard</a></li>
+        <li><a href="/admin.html"><svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="2">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+            </svg>Admin Panel</a></li>
+        <li><a href="/admin-email.html" class="active"><svg class="sidebar-icon" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2">
+              <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+              <polyline points="22,6 12,13 2,6" />
+            </svg>Email Center</a></li>
+        <li><a href="/admin-terms.html"><svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="2">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+              <polyline points="14 2 14 8 20 8" />
+            </svg>Terms Manager</a></li>
+        <li><a href="/admin-notifications.html"><svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="2">
+              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+              <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+            </svg>Admin Notifications</a></li>
+      </ul>
+    </aside>
+
+    <!-- Main -->
+    <main class="main-content" style="padding:1rem">
+      <div class="ec-grid">
+
+        <!-- ══ Left Sidebar ══ -->
+        <div class="ec-sidebar">
+          <div class="ec-sidebar-header">
+            <div class="ec-sidebar-title">Email Center</div>
+            <button class="compose-btn" onclick="showPanel('compose')">
+              ✏️ Compose Email
+            </button>
+          </div>
+
+          <ul class="ec-nav">
+            <li>
+              <div class="ec-nav-item active" data-panel="compose" onclick="showPanel('compose')">
+                <span class="ec-nav-icon">✏️</span> Compose
+              </div>
+            </li>
+            <li>
+              <div class="ec-nav-item" data-panel="csv" onclick="showPanel('csv')">
+                <span class="ec-nav-icon">📂</span> CSV Import
+                <span class="ec-count">NEW</span>
+              </div>
+            </li>
+            <li>
+              <div class="ec-nav-item" data-panel="feedback" onclick="showPanel('feedback')">
+                <span class="ec-nav-icon">💬</span> Feedback Replies
+                <span class="ec-count" id="fbCount">0</span>
+              </div>
+            </li>
+
+            <div class="ec-divider"></div>
+
+            <li>
+              <div class="ec-nav-item" data-panel="history" onclick="showPanel('history')">
+                <span class="ec-nav-icon">📋</span> Sent History
+              </div>
+            </li>
+            <li>
+              <div class="ec-nav-item" data-panel="templates" onclick="showPanel('templates')">
+                <span class="ec-nav-icon">📄</span> Templates
+              </div>
+            </li>
+            <li>
+              <div class="ec-nav-item" data-panel="scheduled" onclick="showPanel('scheduled')">
+                <span class="ec-nav-icon">🕐</span> Scheduled
+              </div>
+            </li>
+          </ul>
+
+          <!-- Stats -->
+          <div class="ec-stat-row" id="sidebarStats">
+            <div class="ec-stat-item"><span>Total Users</span><strong id="totalUsersLabel">—</strong></div>
+            <div class="ec-stat-item"><span>Emails Sent</span><strong id="emailsSentLabel">—</strong></div>
+            <div class="ec-stat-item"><span>Feedback</span><strong id="feedbackCountLabel">—</strong></div>
+          </div>
+        </div>
+
+        <!-- ══ Right Content ══ -->
+        <div class="ec-content">
+
+          <!-- Toolbar -->
+          <div class="ec-toolbar">
+            <div class="ec-toolbar-title" id="panelTitle">✏️ Compose Email</div>
+            <div style="margin-left:auto;display:flex;gap:0.5rem">
+              <button class="btn btn-ghost btn-sm" onclick="refreshPanel()">🔄 Refresh</button>
+            </div>
+          </div>
+
+          <div class="ec-body">
+
+            <!-- ══════════════════════════════════════
+               PANEL: COMPOSE
+          ══════════════════════════════════════ -->
+            <div class="ec-panel active" id="panel-compose">
+              <div class="compose-layout">
+                <!-- Left: Form -->
+                <div>
+                  <!-- Email Type -->
+                  <div style="margin-bottom:1.25rem">
+                    <label class="form-label" style="margin-bottom:0.5rem;display:block">Email Type</label>
+                    <div class="type-chips">
+                      <button class="type-chip active" onclick="setType('feature',this)">🚀 New Feature</button>
+                      <button class="type-chip" onclick="setType('policy',this)">📋 Policy Update</button>
+                      <button class="type-chip" onclick="setType('announcement',this)">📢 Announcement</button>
+                      <button class="type-chip" onclick="setType('newsletter',this)">📰 Newsletter</button>
+                      <button class="type-chip" onclick="setType('custom',this)">✉️ Custom</button>
+                    </div>
+                  </div>
+
+                  <!-- Recipients -->
+                  <div style="margin-bottom:1.25rem">
+                    <label class="form-label" style="margin-bottom:0.5rem;display:block">Send To</label>
+                    <div class="rcpt-grid">
+                      <div class="rcpt-card active" onclick="setRcpt('all',this)">
+                        <span class="icon">🌐</span>
+                        <span class="label">All Users</span>
+                      </div>
+                      <div class="rcpt-card" onclick="setRcpt('single',this)">
+                        <span class="icon">👤</span>
+                        <span class="label">Single User</span>
+                      </div>
+                      <div class="rcpt-card" onclick="setRcpt('role_user',this)">
+                        <span class="icon">👥</span>
+                        <span class="label">All Users (Role)</span>
+                      </div>
+                      <div class="rcpt-card" onclick="setRcpt('csv',this)">
+                        <span class="icon">📂</span>
+                        <span class="label">CSV List</span>
+                      </div>
+                    </div>
+
+                    <!-- Dynamic recipient field -->
+                    <div id="singleEmailField" style="display:none;margin-top:0.75rem">
+                      <div style="position:relative">
+                        <input type="email" class="form-input" id="singleEmail" placeholder="user@example.com" oninput="checkFeedbackSearch()" />
+                        <div id="feedbackSearchStatus" style="position:absolute;right:0.75rem;top:50%;transform:translateY(-50%);display:none;font-size:0.75rem;cursor:pointer"></div>
+                      </div>
+                      <div id="feedbackSearchResult" style="display:none;margin-top:0.5rem;padding:0.75rem;background:var(--accent-light);border:1px solid var(--accent);border-radius:var(--radius-sm);font-size:0.82rem"></div>
+                    </div>
+                    <div id="csvQuickField" style="display:none;margin-top:0.75rem">
+                      <div
+                        style="display:flex;align-items:center;gap:0.75rem;font-size:0.82rem;color:var(--text-secondary)">
+                        <span>📂</span>
+                        <span>Use the <strong onclick="showPanel('csv')" style="color:var(--accent);cursor:pointer">CSV
+                            Import tab</strong> for bulk sending from a file.</span>
+                      </div>
+                    </div>
+                    <div id="allWarn"
+                      style="margin-top:0.5rem;font-size:0.78rem;color:var(--warning);display:flex;align-items:center;gap:0.375rem">
+                      ⚠️ Will send to <strong id="allWarnCount">all</strong> registered users
+                    </div>
+                  </div>
+
+                  <!-- Subject & Headline -->
+                  <div class="form-group">
+                    <label class="form-label">Subject Line</label>
+                    <input type="text" class="form-input" id="emailSubject"
+                      placeholder="e.g. 🚀 LintVertex just got smarter" oninput="syncPreview()" />
+                  </div>
+
+                  <div class="form-group">
+                    <label class="form-label">Headline</label>
+                    <input type="text" class="form-input" id="emailHeadline"
+                      placeholder="e.g. Introducing AI Analysis v2.0" oninput="syncPreview()" />
+                  </div>
+
+                  <!-- Body -->
+                  <div class="form-group">
+                    <label class="form-label">Body
+                      <span style="font-weight:400;color:var(--text-muted)"> — HTML supported</span>
+                    </label>
+                    <div style="display:flex;gap:0.375rem;margin-bottom:0.375rem;flex-wrap:wrap">
+                      <button class="btn btn-ghost btn-sm"
+                        onclick="insertHtml('<strong></strong>')"><strong>B</strong></button>
+                      <button class="btn btn-ghost btn-sm" onclick="insertHtml('<em></em>')"><em>I</em></button>
+                      <button class="btn btn-ghost btn-sm" onclick="insertHtml('<p></p>')">¶</button>
+                      <button class="btn btn-ghost btn-sm" onclick="insertHtml('<ul><li></li></ul>')">• List</button>
+                      <button class="btn btn-ghost btn-sm" onclick="insertHtml('<h2></h2>')">H2</button>
+                      <button class="btn btn-ghost btn-sm" onclick="insertHtml('<br/>')">↵</button>
+                    </div>
+                    <textarea class="form-input" id="emailBody" rows="7"
+                      placeholder="<p>We're excited to announce...</p>" oninput="syncPreview()"></textarea>
+                  </div>
+
+                  <!-- CTA -->
+                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.875rem;margin-bottom:1.25rem">
+                    <div class="form-group" style="margin:0">
+                      <label class="form-label">CTA Button Text</label>
+                      <input type="text" class="form-input" id="ctaText" placeholder="e.g. Try It Now"
+                        oninput="syncPreview()" />
+                    </div>
+                    <div class="form-group" style="margin:0">
+                      <label class="form-label">CTA URL</label>
+                      <input type="url" class="form-input" id="ctaUrl" placeholder="https://..." />
+                    </div>
+                  </div>
+
+                  <!-- Extra options -->
+                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.875rem;margin-bottom:1.25rem">
+                    <div class="form-group" style="margin:0">
+                      <label class="form-label">Tag Label</label>
+                      <input type="text" class="form-input" id="tagLabel" placeholder="e.g. Platform Update" />
+                    </div>
+                    <div class="form-group" style="margin:0">
+                      <label class="form-label">Send At (schedule)</label>
+                      <input type="datetime-local" class="form-input" id="scheduleAt" />
+                    </div>
+                  </div>
+
+                  <!-- Notify checkbox -->
+                  <label
+                    style="display:flex;align-items:center;gap:0.5rem;font-size:0.875rem;margin-bottom:1.25rem;cursor:pointer">
+                    <input type="checkbox" id="notifyAll" style="width:16px;height:16px;accent-color:var(--accent)" />
+                    <span>Send email notification to all users (for policy/feature updates)</span>
+                  </label>
+
+                  <!-- Actions -->
+                  <div style="display:flex;gap:0.75rem;flex-wrap:wrap">
+                    <button class="btn btn-primary" id="sendBtn" onclick="openSendConfirm()">
+                      📧 Send Now
+                    </button>
+                    <button class="btn btn-secondary" onclick="saveDraft()">💾 Save Draft</button>
+                    <button class="btn btn-ghost" onclick="syncPreview()">🔄 Preview</button>
+                  </div>
+
+                  <div class="send-result" id="sendResult"></div>
+                </div>
+
+                <!-- Right: Live Preview -->
+                <div>
+                  <div class="preview-card">
+                    <div class="preview-header">
+                      <span
+                        style="width:8px;height:8px;border-radius:50%;background:var(--success);flex-shrink:0"></span>
+                      Live Preview
+                      <span style="margin-left:auto;font-size:0.65rem;font-weight:400">Updates as you type</span>
+                    </div>
+                    <div class="preview-body" id="previewBody">
+                      <p style="color:#aaa;text-align:center;padding:2rem">Fill in the subject and body to see a
+                        preview...</p>
+                    </div>
+                  </div>
+
+                  <!-- Recipient count card -->
+                  <div class="card" style="margin-top:1rem;padding:1rem">
+                    <div
+                      style="font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-muted);margin-bottom:0.75rem">
+                      Delivery Summary</div>
+                    <div style="display:flex;gap:1.5rem">
+                      <div>
+                        <div style="font-size:1.5rem;font-weight:800;font-family:var(--font-mono)" id="deliveryCount">—
+                        </div>
+                        <div style="font-size:0.65rem;color:var(--text-muted)">RECIPIENTS</div>
+                      </div>
+                      <div>
+                        <div style="font-size:1.5rem;font-weight:800;font-family:var(--font-mono);color:var(--success)"
+                          id="deliveryValid">—</div>
+                        <div style="font-size:0.65rem;color:var(--text-muted)">VALID</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- ══════════════════════════════════════
+               PANEL: CSV IMPORT
+          ══════════════════════════════════════ -->
+            <div class="ec-panel" id="panel-csv">
+              <div style="max-width:800px">
+
+                <!-- Step 1: Upload -->
+                <div style="margin-bottom:1.5rem">
+                  <div style="font-weight:700;font-size:0.9rem;margin-bottom:0.5rem">Step 1 — Upload or Paste CSV</div>
+                  <p style="font-size:0.82rem;color:var(--text-secondary);margin-bottom:1rem">
+                    Your CSV should have email addresses in any column. Headers are optional.
+                    Supports files from Excel, Google Sheets, Mailchimp exports, etc.
+                  </p>
+
+                  <div class="csv-drop-zone" id="csvDropZone">
+                    <input type="file" id="csvFile" accept=".csv,.txt,.tsv" onchange="handleCsvFile(this)" />
+                    <span class="csv-icon">📂</span>
+                    <div style="font-weight:700;font-size:0.95rem;margin-bottom:0.375rem">Drop CSV file here or click to
+                      browse</div>
+                    <div style="font-size:0.78rem;color:var(--text-muted)">Supports .csv, .txt, .tsv · Up to 5,000
+                      addresses</div>
+                  </div>
+
+                  <div style="display:flex;align-items:center;gap:0.75rem;margin:1rem 0">
+                    <div style="flex:1;height:1px;background:var(--border)"></div>
+                    <span style="font-size:0.75rem;color:var(--text-muted)">or paste directly</span>
+                    <div style="flex:1;height:1px;background:var(--border)"></div>
+                  </div>
+
+                  <textarea class="form-input" id="csvPaste" rows="5"
+                    placeholder="john@example.com&#10;jane@company.com&#10;user@domain.org&#10;&#10;Or paste CSV rows: name,email,company"
+                    oninput="csvDirty()"></textarea>
+
+                  <div style="display:flex;gap:0.75rem;margin-top:0.875rem">
+                    <button class="btn btn-secondary" onclick="validateCsv()">🔍 Validate & Preview</button>
+                    <button class="btn btn-ghost btn-sm" onclick="clearCsv()">✕ Clear</button>
+                  </div>
+                </div>
+
+                <!-- CSV validation results -->
+                <div id="csvPreviewSection" style="display:none">
+                  <div style="font-weight:700;font-size:0.9rem;margin-bottom:0.875rem">Step 2 — Review Addresses</div>
+
+                  <div class="csv-stats-bar" id="csvStatsBar"></div>
+
+                  <div class="card" style="padding:0;overflow:hidden;margin-bottom:1.5rem">
+                    <div
+                      style="padding:0.75rem 1rem;border-bottom:1px solid var(--border);font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.07em;color:var(--text-muted);display:flex;justify-content:space-between">
+                      <span>Valid Addresses (preview)</span>
+                      <span id="csvPreviewCount"></span>
+                    </div>
+                    <div style="max-height:200px;overflow-y:auto">
+                      <table class="csv-preview-table">
+                        <thead>
+                          <tr>
+                            <th>#</th>
+                            <th>Email</th>
+                            <th>Status</th>
+                          </tr>
+                        </thead>
+                        <tbody id="csvPreviewBody"></tbody>
+                      </table>
+                    </div>
+                  </div>
+
+                  <!-- Step 3: Compose message for CSV -->
+                  <div style="font-weight:700;font-size:0.9rem;margin-bottom:0.875rem">Step 3 — Compose Your Message
+                  </div>
+
+                  <div class="type-chips" style="margin-bottom:1rem">
+                    <button class="type-chip active" onclick="setCsvType('feature',this)">🚀 Feature</button>
+                    <button class="type-chip" onclick="setCsvType('policy',this)">📋 Policy</button>
+                    <button class="type-chip" onclick="setCsvType('custom',this)">✉️ Custom</button>
+                  </div>
+
+                  <div class="form-group">
+                    <label class="form-label">Subject</label>
+                    <input type="text" class="form-input" id="csvSubject" placeholder="Email subject..." />
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Headline</label>
+                    <input type="text" class="form-input" id="csvHeadline" placeholder="Main headline..." />
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Body (HTML)</label>
+                    <textarea class="form-input" id="csvBody" rows="5" placeholder="<p>Email content...</p>"></textarea>
+                  </div>
+                  <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.875rem;margin-bottom:1.25rem">
+                    <div class="form-group" style="margin:0"><label class="form-label">CTA Text</label><input
+                        type="text" class="form-input" id="csvCta" placeholder="Learn More" /></div>
+                    <div class="form-group" style="margin:0"><label class="form-label">CTA URL</label><input type="url"
+                        class="form-input" id="csvCtaUrl" placeholder="https://..." /></div>
+                  </div>
+
+                  <button class="btn btn-primary btn-lg" onclick="sendCsvEmails()" id="csvSendBtn">
+                    📧 Send to <span id="csvSendCount">0</span> Addresses
+                  </button>
+
+                  <div class="send-result" id="csvSendResult"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- ══════════════════════════════════════
+               PANEL: FEEDBACK REPLIES
+          ══════════════════════════════════════ -->
+            <div class="ec-panel" id="panel-feedback">
+              <div id="feedbackList" style="max-width:700px">
+                <div style="text-align:center;padding:3rem;color:var(--text-muted)">
+                  <div class="spinner"></div>
+                  <div style="margin-top:1rem">Loading feedback...</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- ══════════════════════════════════════
+               PANEL: HISTORY
+          ══════════════════════════════════════ -->
+            <div class="ec-panel" id="panel-history">
+              <div class="card" style="padding:0;overflow:hidden">
+                <div
+                  style="padding:0.875rem 1.25rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between">
+                  <div style="font-weight:700">Email Activity Log</div>
+                  <button class="btn btn-ghost btn-sm" onclick="loadHistory()">🔄</button>
+                </div>
+                <div id="historyList" style="max-height:600px;overflow-y:auto">
+                  <div style="padding:2rem;text-align:center;color:var(--text-muted)">Loading...</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- ══════════════════════════════════════
+               PANEL: TEMPLATES
+          ══════════════════════════════════════ -->
+            <div class="ec-panel" id="panel-templates">
+              <div style="max-width:800px">
+                <p style="font-size:0.875rem;color:var(--text-secondary);margin-bottom:1.5rem">
+                  Click a template to load it into the composer with pre-filled content.
+                </p>
+
+                <div class="template-grid">
+                  <div class="template-card" onclick="loadTemplate('welcome')">
+                    <span class="t-icon">👋</span>
+                    <div class="t-name">Welcome Message</div>
+                    <div class="t-desc">For onboarding new users</div>
+                  </div>
+                  <div class="template-card" onclick="loadTemplate('feature')">
+                    <span class="t-icon">🚀</span>
+                    <div class="t-name">Feature Launch</div>
+                    <div class="t-desc">Announce a new feature</div>
+                  </div>
+                  <div class="template-card" onclick="loadTemplate('maintenance')">
+                    <span class="t-icon">🔧</span>
+                    <div class="t-name">Maintenance Notice</div>
+                    <div class="t-desc">Planned downtime alert</div>
+                  </div>
+                  <div class="template-card" onclick="loadTemplate('security')">
+                    <span class="t-icon">🛡️</span>
+                    <div class="t-name">Security Alert</div>
+                    <div class="t-desc">Security notice to users</div>
+                  </div>
+                  <div class="template-card" onclick="loadTemplate('newsletter')">
+                    <span class="t-icon">📰</span>
+                    <div class="t-name">Monthly Newsletter</div>
+                    <div class="t-desc">Monthly update digest</div>
+                  </div>
+                  <div class="template-card" onclick="loadTemplate('promo')">
+                    <span class="t-icon">🎉</span>
+                    <div class="t-name">Promotion</div>
+                    <div class="t-desc">Special offer or event</div>
+                  </div>
+                </div>
+
+                <!-- Template preview area -->
+                <div id="templatePreview" style="display:none" class="card">
+                  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
+                    <div style="font-weight:700" id="templatePreviewTitle">Template Preview</div>
+                    <button class="btn btn-primary btn-sm" onclick="useTemplate()">✓ Use This Template</button>
+                  </div>
+                  <div id="templatePreviewContent"
+                    style="font-size:0.875rem;color:var(--text-secondary);line-height:1.65"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- ══════════════════════════════════════
+               PANEL: SCHEDULED
+          ══════════════════════════════════════ -->
+            <div class="ec-panel" id="panel-scheduled">
+              <div style="max-width:700px">
+                <div id="scheduledList">
+                  <div style="text-align:center;padding:3rem">
+                    <div style="font-size:3rem;margin-bottom:1rem;opacity:0.4">🕐</div>
+                    <div style="font-weight:700;margin-bottom:0.5rem">No scheduled emails</div>
+                    <p style="font-size:0.875rem;color:var(--text-muted)">
+                      Use the Compose panel and set a "Send At" time to schedule emails.
+                    </p>
+                    <button class="btn btn-primary" style="margin-top:1rem" onclick="showPanel('compose')">Compose
+                      Email</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div><!-- /ec-body -->
+        </div><!-- /ec-content -->
+      </div><!-- /ec-grid -->
+    </main>
+  </div>
+
+  <!-- ══ SEND CONFIRM MODAL ══ -->
+  <div
+    style="position:fixed;inset:0;background:rgba(0,0,0,0.5);backdrop-filter:blur(6px);display:none;align-items:center;justify-content:center;z-index:2000"
+    id="sendConfirmModal">
+    <div
+      style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-lg);padding:2rem;max-width:460px;width:90%;box-shadow:var(--shadow-lg);animation:slideUp 0.2s ease">
+      <div style="font-size:2.5rem;margin-bottom:0.75rem">📧</div>
+      <h3 style="font-size:1.1rem;font-weight:800;margin-bottom:0.5rem">Confirm Send</h3>
+      <p style="font-size:0.875rem;color:var(--text-secondary);margin-bottom:0.5rem">Subject: <strong
+          id="confirmSubjectLabel"></strong></p>
+      <div
+        style="background:var(--bg-secondary);border:1px solid var(--border);border-radius:var(--radius-sm);padding:0.75rem 1rem;margin:1rem 0;font-size:0.82rem;color:var(--warning)">
+        ⚠️ Sending to <strong id="confirmRecipientLabel"></strong>
+      </div>
+      <div style="display:flex;gap:0.75rem">
+        <button class="btn btn-ghost" style="flex:1" onclick="closeSendConfirm()">Cancel</button>
+        <button class="btn btn-primary" style="flex:1" onclick="doSend()">✓ Send Now</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/app.js"></script>
+  <script>
+    const ADMIN_TOKEN_KEY = "lv_admin_token";
+    if (!localStorage.getItem(ADMIN_TOKEN_KEY)) window.location.href = "/admin-login.html";
+
+    const AdminAPI = {
+      async req(method, path, body = null, isForm = false) {
+        const token = localStorage.getItem(ADMIN_TOKEN_KEY);
+        const headers = { "Authorization": `Bearer ${token}` };
+        if (!isForm && body) headers["Content-Type"] = "application/json";
+        const res = await fetch(path, { method, headers, body: isForm ? body : body ? JSON.stringify(body) : null });
+        const data = await res.json().catch(() => ({}));
+        if (res.status === 401) { localStorage.removeItem(ADMIN_TOKEN_KEY); window.location.href = "/admin-login.html"; }
+        return { ok: res.ok, status: res.status, data };
+      },
+      get: (p) => AdminAPI.req("GET", p),
+      post: (p, b) => AdminAPI.req("POST", p, b),
+      postForm: (p, fd) => AdminAPI.req("POST", p, fd, true),
+    };
+
+    /* ── State ── */
+    let emailType = "feature";
+    let recipientType = "all";
+    let userCount = 0;
+    let csvEmailList = [];
+    let csvEmailType = "feature";
+    let selectedTemplate = null;
+
+    /* ── Panel Navigation ── */
+    const PANEL_TITLES = {
+      compose: "✏️ Compose Email",
+      csv: "📂 CSV Import",
+      feedback: "💬 Feedback Replies",
+      history: "📋 Sent History",
+      templates: "📄 Email Templates",
+      scheduled: "🕐 Scheduled Emails",
+    };
+
+    function showPanel(name) {
+      document.querySelectorAll(".ec-panel").forEach(p => p.classList.remove("active"));
+      document.querySelectorAll(".ec-nav-item").forEach(n => n.classList.remove("active"));
+      document.getElementById(`panel-${name}`)?.classList.add("active");
+      document.querySelector(`[data-panel="${name}"]`)?.classList.add("active");
+      document.getElementById("panelTitle").textContent = PANEL_TITLES[name] || name;
+
+      if (name === "feedback") loadFeedback();
+      if (name === "history") loadHistory();
+    }
+
+    function refreshPanel() {
+      const active = document.querySelector(".ec-panel.active");
+      if (active?.id === "panel-feedback") loadFeedback();
+      if (active?.id === "panel-history") loadHistory();
+    }
+
+    /* ── Load Stats ── */
+    async function loadStats() {
+      const { ok, data } = await AdminAPI.get("/api/admin/stats");
+      if (!ok) return;
+      userCount = data.total_users || 0;
+      document.getElementById("totalUsersLabel").textContent = userCount;
+      document.getElementById("feedbackCountLabel").textContent = data.total_feedback || 0;
+      document.getElementById("allWarnCount").textContent = `all ${userCount}`;
+      document.getElementById("deliveryCount").textContent = userCount;
+      document.getElementById("deliveryValid").textContent = userCount;
+      document.getElementById("fbCount").textContent = data.total_feedback || 0;
+
+      // Email sent count from logs
+      const lr = await AdminAPI.get("/api/admin/logs?limit=500");
+      const emailLogs = (lr.data?.logs || []).filter(l => l.action.includes("email"));
+      document.getElementById("emailsSentLabel").textContent = emailLogs.length;
+    }
+
+    /* ── Compose: Type & Recipient ── */
+    function setType(t, btn) {
+      emailType = t;
+      document.querySelectorAll(".type-chip").forEach(c => c.classList.remove("active"));
+      btn.classList.add("active");
+      syncPreview();
+    }
+
+    function setRcpt(t, card) {
+      recipientType = t;
+      document.querySelectorAll(".rcpt-card").forEach(c => c.classList.remove("active"));
+      card.classList.add("active");
+      document.getElementById("singleEmailField").style.display = t === "single" ? "block" : "none";
+      document.getElementById("csvQuickField").style.display = t === "csv" ? "block" : "none";
+      document.getElementById("allWarn").style.display = t === "all" || t === "role_user" ? "flex" : "none";
+      document.getElementById("deliveryCount").textContent = t === "single" ? 1 : userCount;
+      document.getElementById("deliveryValid").textContent = t === "single" ? 1 : userCount;
+    }
+
+    function insertHtml(tag) {
+      const ta = document.getElementById("emailBody");
+      const pos = ta.selectionStart;
+      const sel = ta.value.slice(ta.selectionStart, ta.selectionEnd);
+      // Insert tag wrapping selection
+      const mid = tag.replace("><", `>${sel}<`);
+      ta.value = ta.value.slice(0, pos) + mid + ta.value.slice(ta.selectionEnd);
+      syncPreview();
+    }
+
+    /* ── Live Preview ── */
+    function syncPreview() {
+      const subject = document.getElementById("emailSubject").value || "(no subject)";
+      const headline = document.getElementById("emailHeadline").value || "(headline here)";
+      const body = document.getElementById("emailBody").value || "";
+      const ctaTxt = document.getElementById("ctaText").value;
+      const ctaUrl = document.getElementById("ctaUrl").value || "#";
+
+      const typeLabels = {
+        feature: "🚀 New Feature", policy: "📋 Policy Update",
+        announcement: "📢 Announcement", newsletter: "📰 Newsletter", custom: "✉️ Message"
+      };
+      const tag = typeLabels[emailType] || "📨 Message";
+
+      const ctaHtml = ctaTxt
+        ? `<div style="text-align:center;margin:16px 0"><a href="${ctaUrl}" style="display:inline-block;background:#556B2F;color:#FFFFF0;text-decoration:none;padding:11px 26px;border-radius:10px;font-weight:700;font-size:13px">${ctaTxt} →</a></div>`
+        : "";
+
+      document.getElementById("previewBody").innerHTML = `
+    <div style="background:#556B2F;border-radius:8px 8px 0 0;padding:14px 18px;margin:-16px -16px 16px">
+      <span style="font-size:17px;font-weight:800;color:#FFFFF0;letter-spacing:-0.04em">LintVertex</span>
+    </div>
+    <div style="margin-bottom:12px">
+      <span style="background:rgba(85,107,47,0.12);color:#556B2F;padding:3px 10px;border-radius:100px;font-size:10px;font-weight:700">${tag}</span>
+    </div>
+    <h2 style="font-size:18px;font-weight:800;letter-spacing:-0.03em;margin:0 0 10px">${escapeHtml(headline)}</h2>
+    <p style="font-size:13px;color:#666;margin-bottom:4px">Hi <strong>Developer</strong>,</p>
+    <div style="font-size:13px;color:#555;line-height:1.7;margin-bottom:12px">${body || "<p style='color:#bbb'>Body goes here...</p>"}</div>
+    ${ctaHtml}
+    <div style="margin-top:16px;padding-top:12px;border-top:1px solid #eee;font-size:11px;color:#999;text-align:center">
+      © ${new Date().getFullYear()} LintVertex
+    </div>`;
+    }
+
+    /* ── Send Confirm Modal ── */
+    function openSendConfirm() {
+      const subject = document.getElementById("emailSubject").value.trim();
+      const headline = document.getElementById("emailHeadline").value.trim();
+      const body = document.getElementById("emailBody").value.trim();
+
+      if (!subject || !headline || !body) { Toast.warning("Subject, headline and body are required"); return; }
+
+      let recipientLabel = "all users";
+      if (recipientType === "single") recipientLabel = document.getElementById("singleEmail").value || "1 user";
+      else if (recipientType === "csv") { showPanel("csv"); Toast.info("Use CSV Import tab to send from a file"); return; }
+      else recipientLabel = `all ${userCount} users`;
+
+      document.getElementById("confirmSubjectLabel").textContent = subject;
+      document.getElementById("confirmRecipientLabel").textContent = recipientLabel;
+      document.getElementById("sendConfirmModal").style.display = "flex";
+    }
+
+    function closeSendConfirm() { document.getElementById("sendConfirmModal").style.display = "none"; }
+
+    document.getElementById("sendConfirmModal").addEventListener("click", e => {
+      if (e.target === document.getElementById("sendConfirmModal")) closeSendConfirm();
+    });
+
+    async function doSend() {
+      closeSendConfirm();
+      const btn = document.getElementById("sendBtn");
+      btn.disabled = true; btn.innerHTML = '<div class="spinner"></div> Sending...';
+
+      const payload = {
+        recipient_type: recipientType,
+        email_type: emailType,
+        subject: document.getElementById("emailSubject").value.trim(),
+        headline: document.getElementById("emailHeadline").value.trim(),
+        body_html: document.getElementById("emailBody").value.trim(),
+        cta_text: document.getElementById("ctaText").value,
+        cta_url: document.getElementById("ctaUrl").value,
+        tag_label: document.getElementById("tagLabel").value || "Message",
+      };
+
+      if (recipientType === "single") {
+        payload.recipient_email = document.getElementById("singleEmail").value.trim();
+      }
+
+      const { ok, data } = await AdminAPI.post("/api/admin/email/broadcast", payload);
+      btn.disabled = false; btn.innerHTML = "📧 Send Now";
+
+      const res = document.getElementById("sendResult");
+      res.style.display = "block";
+      if (ok) {
+        res.className = "send-result ok";
+        res.innerHTML = `✅ <strong>Sent to ${data.sent_count} recipient(s)!</strong>${data.failed_count ? ` (${data.failed_count} failed)` : ""}`;
+        Toast.success(`Email sent to ${data.sent_count} user(s)!`);
+      } else {
+        res.className = "send-result err";
+        res.textContent = `❌ ${data.error || "Send failed"}`;
+        Toast.error(data.error || "Send failed");
+      }
+    }
+
+    function saveDraft() { Toast.info("Draft saved locally!"); }
+
+    /* ══════════════════════════════════════════════════════════════
+       CSV IMPORT
+    ══════════════════════════════════════════════════════════════ */
+    function handleCsvFile(input) {
+      const file = input.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = e => {
+        document.getElementById("csvPaste").value = e.target.result;
+        validateCsv();
+      };
+      reader.readAsText(file);
+    }
+
+    // Drag & Drop
+    const dropZone = document.getElementById("csvDropZone");
+    ["dragover", "dragenter"].forEach(ev => dropZone.addEventListener(ev, e => { e.preventDefault(); dropZone.classList.add("drag-over"); }));
+    ["dragleave", "drop"].forEach(ev => dropZone.addEventListener(ev, () => dropZone.classList.remove("drag-over")));
+    dropZone.addEventListener("drop", e => {
+      e.preventDefault();
+      const file = e.dataTransfer?.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = ev => { document.getElementById("csvPaste").value = ev.target.result; validateCsv(); };
+        reader.readAsText(file);
+      }
+    });
+
+    function csvDirty() {
+      document.getElementById("csvPreviewSection").style.display = "none";
+    }
+
+    function clearCsv() {
+      document.getElementById("csvPaste").value = "";
+      document.getElementById("csvFile").value = "";
+      document.getElementById("csvPreviewSection").style.display = "none";
+      csvEmailList = [];
+    }
+
+    async function validateCsv() {
+      const text = document.getElementById("csvPaste").value.trim();
+      if (!text) { Toast.warning("Paste or upload a CSV first"); return; }
+
+      const fd = new FormData();
+      fd.append("csv_text", text);
+
+      const { ok, data } = await AdminAPI.postForm("/api/admin/email/validate-csv", fd);
+      if (!ok) { Toast.error(data.error || "Validation failed"); return; }
+
+      csvEmailList = data.preview || [];
+      const total = data.valid_count;
+
+      // Stats bar
+      document.getElementById("csvStatsBar").innerHTML = `
+    <div class="csv-stat">
+      <div class="csv-stat-n">${data.total_rows}</div>
+      <div class="csv-stat-l">Total Rows</div>
+    </div>
+    <div class="csv-stat">
+      <div class="csv-stat-n" style="color:var(--success)">${data.valid_count}</div>
+      <div class="csv-stat-l">Valid</div>
+    </div>
+    <div class="csv-stat">
+      <div class="csv-stat-n" style="color:${data.invalid_count > 0 ? "var(--error)" : "var(--text-muted)"}">${data.invalid_count}</div>
+      <div class="csv-stat-l">Invalid</div>
+    </div>
+    <div class="csv-stat">
+      <div class="csv-stat-n">${total > 20 ? "20+" : total}</div>
+      <div class="csv-stat-l">Preview Shown</div>
+    </div>`;
+
+      // Preview table
+      const preview = data.preview || [];
+      document.getElementById("csvPreviewCount").textContent = `Showing first ${preview.length} of ${total}`;
+      document.getElementById("csvPreviewBody").innerHTML = preview.map((email, i) => `
+    <tr>
+      <td style="color:var(--text-muted)">${i + 1}</td>
+      <td>${escapeHtml(email)}</td>
+      <td><span class="badge badge-success">✓ Valid</span></td>
+    </tr>`).join("");
+
+      if (data.invalid && data.invalid.length) {
+        document.getElementById("csvPreviewBody").innerHTML += data.invalid.slice(0, 5).map(e => `
+      <tr>
+        <td style="color:var(--text-muted)">—</td>
+        <td style="text-decoration:line-through;color:var(--text-muted)">${escapeHtml(e)}</td>
+        <td><span class="badge badge-error">✗ Invalid</span></td>
+      </tr>`).join("");
+      }
+
+      document.getElementById("csvSendCount").textContent = total;
+      document.getElementById("csvPreviewSection").style.display = "block";
+      Toast.success(`${total} valid email addresses found!`);
+    }
+
+    function setCsvType(t, btn) {
+      csvEmailType = t;
+      document.querySelectorAll("#panel-csv .type-chip").forEach(c => c.classList.remove("active"));
+      btn.classList.add("active");
+    }
+
+    async function sendCsvEmails() {
+      const subject = document.getElementById("csvSubject").value.trim();
+      const headline = document.getElementById("csvHeadline").value.trim();
+      const body = document.getElementById("csvBody").value.trim();
+      const csvText = document.getElementById("csvPaste").value.trim();
+
+      if (!subject || !headline || !body) { Toast.warning("Subject, headline and body required"); return; }
+      if (!csvEmailList.length) { Toast.warning("No valid emails — validate CSV first"); return; }
+
+      if (!confirm(`Send email to ${csvEmailList.length} addresses?\n\nSubject: ${subject}`)) return;
+
+      const btn = document.getElementById("csvSendBtn");
+      btn.disabled = true; btn.innerHTML = '<div class="spinner"></div> Sending...';
+
+      const fd = new FormData();
+      fd.append("subject", subject);
+      fd.append("headline", headline);
+      fd.append("body_html", body);
+      fd.append("email_type", csvEmailType);
+      fd.append("cta_text", document.getElementById("csvCta").value);
+      fd.append("cta_url", document.getElementById("csvCtaUrl").value);
+      fd.append("emails", JSON.stringify(csvEmailList));
+      if (document.getElementById("csvFile").files[0]) {
+        fd.append("csv_file", document.getElementById("csvFile").files[0]);
+      } else {
+        fd.append("csv_text", csvText);
+      }
+
+      const { ok, data } = await AdminAPI.postForm("/api/admin/email/send-csv", fd);
+      btn.disabled = false; btn.innerHTML = `📧 Send to <span id="csvSendCount">${csvEmailList.length}</span> Addresses`;
+
+      const res = document.getElementById("csvSendResult");
+      res.style.display = "block";
+      if (ok) {
+        res.className = "send-result ok";
+        res.innerHTML = `
+      ✅ <strong>Email queued for ${data.sent_count} addresses!</strong>
+      ${data.failed_count ? ` · ${data.failed_count} failed` : ""}
+      ${data.invalid_count ? ` · ${data.invalid_count} invalid (skipped)` : ""}
+      <br/><small style="opacity:0.8">Total processed: ${data.total_csv_rows} rows</small>`;
+        Toast.success(`Emails sent to ${data.sent_count} addresses!`);
+      } else {
+        res.className = "send-result err";
+        res.textContent = `❌ ${data.error || "Send failed"}`;
+        Toast.error(data.error || "Failed");
+      }
+    }
+
+    /* ══════════════════════════════════════════════════════════════
+       FEEDBACK REPLIES
+    ══════════════════════════════════════════════════════════════ */
+    async function loadFeedback() {
+      const list = document.getElementById("feedbackList");
+      list.innerHTML = `<div style="text-align:center;padding:2rem"><div class="spinner"></div></div>`;
+
+      const { ok, data } = await AdminAPI.get("/api/admin/feedback");
+      const items = data?.feedback || [];
+
+      if (!items.length) {
+        list.innerHTML = `<div style="text-align:center;padding:3rem;color:var(--text-muted)">
+      <div style="font-size:3rem;margin-bottom:1rem;opacity:0.3">💬</div>
+      <div style="font-weight:700">No feedback yet</div>
+    </div>`;
+        return;
+      }
+
+      list.innerHTML = items.map(f => `
+    <div class="fb-card">
+      <div class="fb-card-header">
+        <div class="fb-avatar">${(f.user || "?")[0].toUpperCase()}</div>
+        <div>
+          <div class="fb-user-name">${escapeHtml(f.user)}</div>
+          <div class="fb-user-email">${escapeHtml(f.email)}</div>
+        </div>
+        <div class="fb-rating">${"⭐".repeat(f.rating)}</div>
+        <div style="font-size:0.72rem;color:var(--text-muted);margin-left:auto">${formatRelative(f.created_at)}</div>
+      </div>
+      <div class="fb-card-body">
+        <div class="fb-text">"${escapeHtml(f.text)}"</div>
+        <label class="form-label" style="margin-bottom:0.375rem;display:block">Your Reply</label>
+        <textarea class="form-input" id="reply_${f.id}" rows="3"
+          placeholder="Write a personal reply to ${escapeHtml(f.user)}..."
+          style="font-size:0.82rem;margin-bottom:0.75rem"></textarea>
+        <div style="display:flex;gap:0.5rem;flex-wrap:wrap">
+          <button class="btn btn-primary btn-sm" onclick="sendFbReply('${f.id}',this)">📧 Send Reply</button>
+          <button class="btn btn-ghost btn-sm" onclick="fillReply('${f.id}')">✨ AI Draft</button>
+          <button class="btn btn-ghost btn-sm" onclick="replyInComposer('${f.email}', '${f.text.replace(/'/g, "\\'")}', '${(f.user||'Developer').replace(/'/g, "\\'")}')">✍️ Email Composer</button>
+          <button class="btn btn-ghost btn-sm" onclick="replyAsNotif('${f.email}')">🔔 In-App Notif</button>
+        </div>
+      </div>
+    </div>`).join("");
+    }
+
+    async function sendFbReply(fbId, btn) {
+      const reply = document.getElementById(`reply_${fbId}`).value.trim();
+      if (!reply) { Toast.warning("Write a reply first"); return; }
+      btn.disabled = true; btn.innerHTML = '<div class="spinner"></div>';
+      const { ok, data } = await AdminAPI.post("/api/admin/email/feedback-reply", { feedback_id: fbId, reply });
+      btn.disabled = false; btn.innerHTML = "📧 Send Reply";
+      if (ok) { Toast.success(data.message); document.getElementById(`reply_${fbId}`).value = ""; }
+      else Toast.error(data.error || "Failed to send reply");
+    }
+
+    function fillReply(fbId) {
+      document.getElementById(`reply_${fbId}`).value =
+        "Thank you so much for your feedback! We really appreciate you taking the time to share your thoughts. Your input helps us improve LintVertex for everyone. We'll take your suggestions into consideration as we continue to develop the platform.\n\nBest regards,\nThe LintVertex Team";
+    }
+
+    function replyInComposer(email, text, user) {
+      showPanel('compose');
+      const rcptCard = document.querySelector('.rcpt-card[onclick*="single"]');
+      if (rcptCard) setRcpt('single', rcptCard);
+      
+      document.getElementById('singleEmail').value = email;
+      document.getElementById('emailSubject').value = `Re: Your Feedback – LintVertex`;
+      document.getElementById('emailHeadline').value = `Thank you for your feedback, ${user}!`;
+      document.getElementById('emailBody').value = `<p>Hi ${user},</p><p>Thank you so much for your feedback: <em>"${text}"</em></p><p>Our response:</p><p>...</p>`;
+      
+      // Select appropriate email type
+      const typeBtn = document.querySelector('.type-chip[onclick*="newsletter"]') || document.querySelector('.type-chip');
+      if (typeBtn) setType('custom', typeBtn);
+      
+      syncPreview();
+      Toast.success("Loaded feedback into composer!");
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function replyAsNotif(email) {
+      window.location.href = `/admin-notifications.html?email=${encodeURIComponent(email)}`;
+    }
+
+    async function checkFeedbackSearch() {
+      const email = document.getElementById('singleEmail').value.trim();
+      const status = document.getElementById('feedbackSearchStatus');
+      const result = document.getElementById('feedbackSearchResult');
+
+      status.style.display = 'none';
+      result.style.display = 'none';
+
+      if (email.length < 5 || !email.includes('@')) return;
+
+      const { ok, data } = await AdminAPI.get(`/api/admin/feedback?email=${encodeURIComponent(email)}`);
+      if (ok && data.feedback && data.feedback.length > 0) {
+        const fb = data.feedback[0];
+        status.innerHTML = `💬 <span style="color:var(--accent);font-weight:700">Has Feedback</span>`;
+        status.style.display = 'block';
+        status.onclick = () => {
+          result.innerHTML = `
+                  <div style="display:flex;justify-content:space-between;margin-bottom:0.5rem">
+                    <strong>Found Recent Feedback:</strong>
+                    <button class="btn btn-ghost btn-sm" style="padding:0;min-width:24px" onclick="document.getElementById('feedbackSearchResult').style.display='none'">✕</button>
+                  </div>
+                  <div style="font-style:italic;margin-bottom:0.75rem;color:var(--text-secondary)">"${fb.text}"</div>
+                  <button class="btn btn-primary btn-sm btn-full" onclick="applyFeedbackToComposer('${fb.email}', '${fb.text.replace(/'/g, "\\'")}', '${(fb.user || 'Developer').replace(/'/g, "\\'")}')">
+                    ✨ Use as Reply Template
+                  </button>
+                `;
+          result.style.display = 'block';
+        };
+      }
+    }
+
+    function applyFeedbackToComposer(email, text, user) {
+      document.getElementById('emailSubject').value = `Re: Your Feedback – LintVertex`;
+      document.getElementById('emailHeadline').value = `Thank you for your feedback, ${user}!`;
+      document.getElementById('emailBody').value = `<p>Hi ${user},</p><p>Thank you so much for your feedback: <em>"${text}"</em></p><p>Our response:</p><p>...</p>`;
+      syncPreview();
+      document.getElementById('feedbackSearchResult').style.display = 'none';
+      Toast.success("Feedback applied to composer!");
+    }
+    /* ══════════════════════════════════════════════════════════════
+       HISTORY
+    ══════════════════════════════════════════════════════════════ */
+    const TYPE_ICONS = { feature: "🚀", policy: "📋", custom: "✉️", csv: "📂", feedback: "💬", broadcast: "📢" };
+
+    async function loadHistory() {
+      const { ok, data } = await AdminAPI.get("/api/admin/logs?limit=200");
+      const logs = (data?.logs || []).filter(l => l.action.includes("email") || l.action.includes("broadcast") || l.action.includes("csv"));
+      const list = document.getElementById("historyList");
+
+      if (!logs.length) {
+        list.innerHTML = `<div style="padding:2rem;text-align:center;color:var(--text-muted)">No email activity yet</div>`;
+        return;
+      }
+
+      list.innerHTML = logs.map(l => {
+        const iscsv = l.action.includes("csv");
+        const isfb = l.action.includes("feedback");
+        const icon = iscsv ? "📂" : isfb ? "💬" : "📧";
+        // Parse sent count from action string
+        const sentMatch = l.action.match(/sent=(\d+)/);
+        const sentCount = sentMatch ? sentMatch[1] : null;
+
+        return `
+    <div class="sent-item">
+      <div class="sent-icon">${icon}</div>
+      <div style="flex:1;min-width:0">
+        <div class="sent-subject">${escapeHtml(l.action.replace(/_/g, ' ').replace(/admin /i, '').split(':')[0])}</div>
+        <div class="sent-meta">${escapeHtml(l.user)} · ${formatRelative(l.timestamp)}</div>
+        ${l.action.includes('subject=') ? `<div style="font-size:0.72rem;color:var(--text-muted);font-family:var(--font-mono);margin-top:0.15rem">${escapeHtml(l.action.split('subject=')[1]?.slice(0, 50) || '')}</div>` : ''}
+      </div>
+      ${sentCount ? `<span class="sent-badge">✓ ${sentCount} sent</span>` : ""}
+    </div>`;
+      }).join("");
+    }
+
+    /* ══════════════════════════════════════════════════════════════
+       TEMPLATES
+    ══════════════════════════════════════════════════════════════ */
+    const TEMPLATES = {
+      welcome: {
+        name: "Welcome Message", type: "custom",
+        subject: "Welcome to LintVertex! 👋",
+        headline: "You're all set to start reviewing",
+        body: `<p>Hi there! Welcome to <strong>LintVertex</strong> — your AI-powered code review platform.</p>
+<p>Here's what you can do right now:</p>
+<ul>
+  <li>🔍 Paste any Python, Java, C, or C++ code for instant AI analysis</li>
+  <li>📊 Get a quality score and grade for your code</li>
+  <li>💬 Join or create discussion rooms with your team</li>
+</ul>
+<p>We're excited to have you on board. Happy reviewing!</p>`,
+        cta: "Analyze Your First Code", ctaUrl: "/analyze.html"
+      },
+      feature: {
+        name: "Feature Launch", type: "feature",
+        subject: "🚀 New Feature: AI Code Analysis v2.0",
+        headline: "Smarter analysis, faster results",
+        body: `<p>We've just shipped a major update to LintVertex! Here's what's new:</p>
+<p>Our AI pipeline now uses <strong>Gemini 1.5 Flash</strong> with improved prompting for more accurate bug detection and better code improvement suggestions.</p>`,
+        cta: "Try the New Analysis", ctaUrl: "/analyze.html"
+      },
+      maintenance: {
+        name: "Maintenance Notice", type: "policy",
+        subject: "⚠️ Scheduled Maintenance — Sunday 2AM UTC",
+        headline: "Brief downtime planned for improvements",
+        body: `<p>We're performing <strong>scheduled maintenance</strong> on our infrastructure this Sunday, 2:00 AM – 4:00 AM UTC.</p>
+<p>During this time, LintVertex will be temporarily unavailable. We recommend saving any ongoing work before then.</p>
+<p>We apologize for any inconvenience and appreciate your patience.</p>`,
+        cta: "Check Status Page", ctaUrl: "/"
+      },
+      security: {
+        name: "Security Alert", type: "policy",
+        subject: "🛡️ Important Security Notice",
+        headline: "Action recommended for your account",
+        body: `<p>We're reaching out to let you know about a security improvement we've made to the LintVertex platform.</p>
+<p>We recommend you <strong>review your account settings</strong> and ensure your password meets our current security requirements (minimum 8 characters, uppercase, and number).</p>
+<p>If you notice any suspicious activity, please contact us immediately.</p>`,
+        cta: "Review Account Settings", ctaUrl: "/profile.html"
+      },
+      newsletter: {
+        name: "Monthly Newsletter", type: "custom",
+        subject: "📰 LintVertex Monthly Update — ${month}",
+        headline: "What's new this month",
+        body: `<p>Here's your monthly roundup of what's been happening at LintVertex:</p>
+<ul>
+  <li>📈 Platform stats and usage highlights</li>
+  <li>🆕 Features shipped this month</li>
+  <li>🐛 Bug fixes and improvements</li>
+  <li>🗺️ What's coming next</li>
+</ul>
+<p>Thank you for being a part of our community!</p>`,
+        cta: "Read Full Update", ctaUrl: "/"
+      },
+      promo: {
+        name: "Promotion", type: "feature",
+        subject: "🎉 Special Offer Inside!",
+        headline: "Something exciting for our community",
+        body: `<p>We have something special to share with you! As one of our valued LintVertex users, you're getting early access to our latest improvements.</p>
+<p>We're constantly working to make your code review experience better, and your feedback is what drives us forward.</p>`,
+        cta: "Check It Out", ctaUrl: "/dashboard.html"
+      }
+    };
+
+    let activeTemplateName = null;
+
+    function loadTemplate(name) {
+      const t = TEMPLATES[name];
+      if (!t) return;
+      activeTemplateName = name;
+
+      document.querySelectorAll(".template-card").forEach(c => c.classList.remove("active"));
+      event.currentTarget.classList.add("active");
+
+      document.getElementById("templatePreviewTitle").textContent = t.name;
+      document.getElementById("templatePreviewContent").innerHTML = `
+    <p><strong>Subject:</strong> ${escapeHtml(t.subject)}</p>
+    <p><strong>Headline:</strong> ${escapeHtml(t.headline)}</p>
+    <div style="margin-top:0.75rem;padding:0.75rem;background:var(--bg-secondary);border-radius:var(--radius-sm)">${t.body}</div>`;
+      document.getElementById("templatePreview").style.display = "block";
+    }
+
+    function useTemplate() {
+      if (!activeTemplateName) return;
+      const t = TEMPLATES[activeTemplateName];
+      showPanel("compose");
+      setTimeout(() => {
+        document.getElementById("emailSubject").value = t.subject;
+        document.getElementById("emailHeadline").value = t.headline;
+        document.getElementById("emailBody").value = t.body;
+        document.getElementById("ctaText").value = t.cta || "";
+        document.getElementById("ctaUrl").value = t.ctaUrl || "";
+        syncPreview();
+        Toast.success(`Template "${t.name}" loaded!`);
+      }, 100);
+    }
+
+    /* ══════════════════════════════════════════════════════════════
+       LOGOUT
+    ══════════════════════════════════════════════════════════════ */
+    async function adminLogout() {
+      await AdminAPI.post("/api/admin/logout", {});
+      localStorage.removeItem(ADMIN_TOKEN_KEY);
+      window.location.href = "/admin-login.html";
+    }
+
+    /* ══════════════════════════════════════════════════════════════
+       INIT
+    ══════════════════════════════════════════════════════════════ */
+    loadStats();
+    syncPreview();
+  </script>
+</body>
+
+</html>

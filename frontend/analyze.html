@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Code Analysis – LintVertex</title>
+  <link rel="stylesheet" href="css/main.css" />
+  <style>
+    .analyze-layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+    }
+
+    @media (max-width: 1100px) {
+      .analyze-layout {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .editor-panel {
+      position: sticky;
+      top: 80px;
+    }
+
+    .results-panel {
+      min-height: 400px;
+    }
+
+    .lang-detected {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+    }
+
+    .lang-detected.detected {
+      color: var(--success);
+      font-weight: 600;
+    }
+
+    .score-summary {
+      display: flex;
+      align-items: center;
+      gap: 2rem;
+      padding: 1.5rem;
+      background: var(--bg-secondary);
+      border-radius: var(--radius-md);
+      margin-bottom: 1.5rem;
+    }
+
+    .breakdown-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.75rem;
+    }
+
+    .breakdown-item {
+      padding: 0.75rem 1rem;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+    }
+
+    .breakdown-label {
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-muted);
+      margin-bottom: 0.25rem;
+    }
+
+    .breakdown-bar-wrap {
+      height: 6px;
+      background: var(--border);
+      border-radius: 3px;
+      overflow: hidden;
+      margin-top: 0.5rem;
+    }
+
+    .breakdown-bar {
+      height: 100%;
+      border-radius: 3px;
+      background: var(--accent);
+      transition: width 1s ease;
+    }
+
+    .ai-content {
+      font-size: 0.875rem;
+      line-height: 1.7;
+      color: var(--text-primary);
+    }
+
+    .ai-content h2 {
+      font-size: 1rem;
+      margin: 1.25rem 0 0.5rem;
+      padding-bottom: 0.375rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .ai-content ul {
+      padding-left: 1.5rem;
+    }
+
+    .ai-content li {
+      margin-bottom: 0.375rem;
+    }
+
+    .ai-content code {
+      background: var(--bg-secondary);
+      padding: 0.1rem 0.4rem;
+      border-radius: 4px;
+      font-size: 0.8em;
+    }
+
+    .ai-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.375rem;
+      font-size: 0.7rem;
+      font-weight: 600;
+      padding: 0.25rem 0.6rem;
+      border-radius: 100px;
+      background: var(--accent-light);
+      color: var(--accent);
+    }
+
+    .empty-results {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 400px;
+      text-align: center;
+      color: var(--text-muted);
+    }
+
+    .empty-results .big-icon {
+      font-size: 4rem;
+      margin-bottom: 1rem;
+      opacity: 0.5;
+    }
+
+    .analyzing-overlay {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 400px;
+      gap: 1.5rem;
+      text-align: center;
+    }
+
+    .analyzing-steps {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      text-align: left;
+    }
+
+    .step {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-size: 0.875rem;
+      color: var(--text-muted);
+    }
+
+    .step.done {
+      color: var(--success);
+    }
+
+    .step.active {
+      color: var(--text-primary);
+      font-weight: 600;
+    }
+
+    .step-icon {
+      width: 20px;
+      text-align: center;
+    }
+  </style>
+</head>
+
+<body>
+  <nav class="navbar">
+    <a href="/index.html" class="logo-text">Lint<span>Vertex</span></a>
+    <ul class="nav-links">
+      <li><a href="/dashboard.html">Dashboard</a></li>
+      <li><a href="/analyze.html" class="active">Analyze</a></li>
+      <li><a href="/history.html">History</a></li>
+      <li><a href="/rooms.html">Rooms</a></li>
+    </ul>
+    <div style="display:flex;align-items:center;gap:0.75rem">
+      <div class="theme-toggle">
+        <span class="theme-label">☀️</span>
+        <button class="toggle-track">
+          <div class="toggle-thumb"></div>
+        </button>
+      </div>
+
+      <a href="/notifications.html" class="notif-bell" data-notif-count="0" title="Notifications">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+        </svg>
+        <span class="notif-badge" style="display:none">0</span>
+      </a>
+
+      <a href="#" data-logout class="btn btn-ghost btn-sm">Logout</a>
+    </div>
+  </nav>
+
+  <div class="layout">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <ul class="sidebar-nav">
+        <li><a href="/dashboard.html"><svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="2">
+              <rect x="3" y="3" width="7" height="7" />
+              <rect x="14" y="3" width="7" height="7" />
+              <rect x="3" y="14" width="7" height="7" />
+              <rect x="14" y="14" width="7" height="7" />
+            </svg>Dashboard</a></li>
+        <li><a href="/analyze.html" class="active"><svg class="sidebar-icon" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2">
+              <polyline points="16 18 22 12 16 6" />
+              <polyline points="8 6 2 12 8 18" />
+            </svg>Code Analysis</a></li>
+        <li><a href="/history.html"><svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="2">
+              <circle cx="12" cy="12" r="10" />
+              <polyline points="12 6 12 12 16 14" />
+            </svg>History</a></li>
+        <li><a href="/rooms.html"><svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="2">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+            </svg>Rooms</a></li>
+        <li><a href="/profile.html"><svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="2">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+              <circle cx="12" cy="7" r="4" />
+            </svg>Profile</a></li>
+        <li><a href="/feedback.html"><svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="2">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+            </svg>Feedback</a></li>
+        <li><a href="/about.html"><svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10" />
+              <line x1="12" y1="16" x2="12" y2="12" />
+              <line x1="12" y1="8" x2="12.01" y2="8" />
+            </svg>About</a></li>
+        <li class="admin-only" style="display:none"><a href="/admin.html"><svg class="sidebar-icon" viewBox="0 0 24 24"
+              fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+            </svg>Admin</a></li>
+      </ul>
+    </aside>
+
+    <!-- Main -->
+    <main class="main-content">
+      <div class="page-title">Code Analysis</div>
+      <p class="page-subtitle">Paste your code below — language is detected automatically</p>
+
+      <div class="analyze-layout">
+        <!-- Editor Panel -->
+        <div class="editor-panel">
+          <div class="card" style="padding:0;overflow:hidden">
+            <div class="code-editor-header">
+              <span style="font-weight:600">Code Editor</span>
+              <div style="display:flex;align-items:center;gap:1rem">
+                <span class="lang-detected" id="langDetected">Auto-detect</span>
+                <label class="btn btn-ghost btn-sm" style="cursor:pointer">
+                  📁 Upload File
+                  <input type="file" id="fileInput" accept=".py,.java,.c,.cpp,.h,.txt" style="display:none" />
+                </label>
+              </div>
+            </div>
+            <div class="code-editor">
+              <textarea class="code-textarea" id="codeEditor" placeholder="# Paste your Python, Java, C, or C++ code here...
+# Language is detected automatically
+
+def hello(name):
+    print(f'Hello, {name}!')
+    
+hello('World')" spellcheck="false"></textarea>
+            </div>
+            <div
+              style="padding:0.875rem 1rem;display:flex;align-items:center;justify-content:space-between;border-top:1px solid var(--border)">
+              <span style="font-size:0.75rem;color:var(--text-muted)" id="charCount">0 chars</span>
+              <div style="display:flex;gap:0.5rem">
+                <button class="btn btn-ghost btn-sm" onclick="clearEditor()">Clear</button>
+                <button class="btn btn-primary" id="analyzeBtn" onclick="runAnalysis()">
+                  ⚡ Analyze Code
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Results Panel -->
+        <div class="results-panel">
+          <!-- Empty State -->
+          <div class="empty-results" id="emptyResults">
+            <div class="big-icon">🔍</div>
+            <h3 style="font-size:1rem;font-weight:700;color:var(--text-primary);margin-bottom:0.5rem">
+              Ready to analyze
+            </h3>
+            <p style="font-size:0.875rem;max-width:280px">
+              Paste your code on the left and click <strong>Analyze Code</strong>
+            </p>
+          </div>
+
+          <!-- Analyzing Overlay -->
+          <div class="analyzing-overlay" id="analyzingOverlay">
+            <div class="spinner" style="width:40px;height:40px;border-width:3px"></div>
+            <div>
+              <div style="font-size:1rem;font-weight:700;margin-bottom:1rem">Analyzing your code...</div>
+              <div class="analyzing-steps" id="analyzingSteps">
+                <div class="step active" id="step1"><span class="step-icon">🔍</span> Detecting language</div>
+                <div class="step" id="step2"><span class="step-icon">📊</span> Running ML analysis</div>
+                <div class="step" id="step3"><span class="step-icon">🤖</span> Calling Gemini AI</div>
+                <div class="step" id="step4"><span class="step-icon">📝</span> Structuring report</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Results -->
+          <div id="resultsContainer" style="display:none">
+            <!-- Header bar -->
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem">
+              <div style="display:flex;align-items:center;gap:0.75rem">
+                <span id="resultLangIcon" style="font-size:1.5rem">📄</span>
+                <div>
+                  <div style="font-weight:700" id="resultLang">—</div>
+                  <div style="font-size:0.75rem;color:var(--text-muted)" id="resultConfidence"></div>
+                </div>
+              </div>
+              <span class="ai-badge" id="aiProviderBadge">🤖 Gemini AI</span>
+            </div>
+
+            <!-- Score + Breakdown -->
+            <div class="score-summary">
+              <div id="scoreRingContainer"></div>
+              <div style="flex:1">
+                <div style="font-weight:700;font-size:1.1rem;margin-bottom:0.25rem" id="gradeLabel">—</div>
+                <div class="breakdown-grid" id="breakdownGrid"></div>
+              </div>
+            </div>
+
+            <!-- Tabs -->
+            <div class="tabs">
+              <button class="tab-btn active" data-tab="ai">🤖 AI Report</button>
+              <button class="tab-btn" data-tab="issues">⚠️ Issues <span id="issueCount"></span></button>
+              <button class="tab-btn" data-tab="metrics">📊 Metrics</button>
+            </div>
+
+            <div class="tab-panel active" id="tab-ai">
+              <div class="card ai-content" id="aiContent"></div>
+            </div>
+
+            <div class="tab-panel" id="tab-issues">
+              <div id="issuesList"></div>
+            </div>
+
+            <div class="tab-panel" id="tab-metrics">
+              <div class="card">
+                <table class="history-table" id="metricsTable" style="font-size:0.875rem">
+                  <thead>
+                    <tr>
+                      <th>Metric</th>
+                      <th>Value</th>
+                    </tr>
+                  </thead>
+                  <tbody id="metricsBody"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="js/app.js"></script>
+  <script>
+    Auth.requireAuth();
+
+    const textarea = document.getElementById("codeEditor");
+
+    // Char count
+    textarea.addEventListener("input", () => {
+      document.getElementById("charCount").textContent = `${textarea.value.length.toLocaleString()} chars`;
+      // Quick language hint based on first line
+      const code = textarea.value.trim();
+      if (!code) { document.getElementById("langDetected").textContent = "Auto-detect"; document.getElementById("langDetected").className = "lang-detected"; return; }
+      const hints = { python: "🐍 Python", java: "♨️ Java", c: "⚙️ C", cpp: "🔧 C++" };
+      const hint = code.includes("def ") || code.includes("import ") || code.includes("print(") ? "python"
+        : code.includes("public class") || code.includes("System.out") ? "java"
+          : code.includes("std::") || code.includes("cout") ? "cpp"
+            : code.includes("#include") ? "c" : null;
+      if (hint) {
+        document.getElementById("langDetected").textContent = hints[hint] || hint;
+        document.getElementById("langDetected").className = "lang-detected detected";
+      }
+    });
+
+    // File upload
+    document.getElementById("fileInput").addEventListener("change", (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (ev) => { textarea.value = ev.target.result; textarea.dispatchEvent(new Event("input")); };
+      reader.readAsText(file);
+    });
+
+    function clearEditor() {
+      textarea.value = "";
+      textarea.dispatchEvent(new Event("input"));
+      document.getElementById("resultsContainer").style.display = "none";
+      document.getElementById("emptyResults").style.display = "flex";
+    }
+
+    // Step animation
+    let stepTimer = null;
+    function startStepAnimation() {
+      const steps = ["step1", "step2", "step3", "step4"];
+      let i = 0;
+      steps.forEach(s => { document.getElementById(s).className = "step"; });
+      document.getElementById(steps[0]).className = "step active";
+      stepTimer = setInterval(() => {
+        document.getElementById(steps[i]).className = "step done";
+        document.getElementById(steps[i]).querySelector(".step-icon").textContent = "✓";
+        i++;
+        if (i < steps.length) document.getElementById(steps[i]).className = "step active";
+        else clearInterval(stepTimer);
+      }, 900);
+    }
+
+    async function runAnalysis() {
+      const code = textarea.value.trim();
+      if (!code) { Toast.warning("Please paste some code first"); return; }
+
+      const btn = document.getElementById("analyzeBtn");
+      btn.disabled = true; btn.innerHTML = '<div class="spinner"></div> Analyzing...';
+
+      document.getElementById("emptyResults").style.display = "none";
+      document.getElementById("resultsContainer").style.display = "none";
+      document.getElementById("analyzingOverlay").style.display = "flex";
+      startStepAnimation();
+
+      const { ok, data } = await API.post("/api/analysis/submit", { code });
+
+      clearInterval(stepTimer);
+      btn.disabled = false; btn.innerHTML = "⚡ Analyze Code";
+      document.getElementById("analyzingOverlay").style.display = "none";
+
+      if (!ok) {
+        Toast.error(data.error || "Analysis failed");
+        document.getElementById("emptyResults").style.display = "flex";
+        return;
+      }
+
+      renderResults(data);
+    }
+
+    function renderResults(data) {
+      const ICONS = { python: "🐍", java: "☕", c: "⚙️", cpp: "🔧", unknown: "📄" };
+      const lang = data.language;
+
+      document.getElementById("resultLangIcon").textContent = lang.icon;
+      document.getElementById("resultLang").textContent = lang.display + " detected";
+      document.getElementById("resultConfidence").textContent = `Confidence: ${(lang.confidence * 100).toFixed(0)}%`;
+
+      const providerMap = { gemini: "🤖 Gemini AI", ollama: "🦙 Ollama (local)", fallback: "📊 Static Analysis", none: "📊 Static Analysis" };
+      document.getElementById("aiProviderBadge").textContent = providerMap[data.ai.provider] || "🤖 AI";
+
+      // Score ring
+      renderScoreRing("scoreRingContainer", data.quality.score, 100);
+
+      const gradeColors = { A: "var(--grade-a)", B: "var(--grade-b)", C: "var(--grade-c)", D: "var(--grade-d)", F: "var(--grade-f)" };
+      document.getElementById("gradeLabel").innerHTML =
+        `<span style="color:${gradeColors[data.quality.grade] || 'var(--text-primary)'}">Grade ${data.quality.grade}</span> &nbsp; Quality Score`;
+
+      // Breakdown bars
+      const breakdown = data.quality.breakdown || {};
+      document.getElementById("breakdownGrid").innerHTML = Object.entries(breakdown).map(([k, v]) => `
+        <div class="breakdown-item">
+          <div class="breakdown-label">${k.replace(/_/g, " ")}</div>
+          <div style="font-weight:700;font-size:0.9rem">${v}<span style="color:var(--text-muted);font-size:0.7rem">/25</span></div>
+          <div class="breakdown-bar-wrap"><div class="breakdown-bar" style="width:${(v / 25) * 100}%"></div></div>
+        </div>`).join("");
+
+      // AI Report (render markdown-ish)
+      const aiText = data.ai.full_text || "No AI analysis available.";
+      document.getElementById("aiContent").innerHTML = renderMarkdown(aiText);
+
+      // Issues
+      const issues = data.issues?.list || [];
+      const issueCount = document.getElementById("issueCount");
+      issueCount.innerHTML = issues.length ? `<span class="badge badge-${issues.some(i => i.severity === "error") ? "error" : "warning"}">${issues.length}</span>` : "";
+
+      if (!issues.length) {
+        document.getElementById("issuesList").innerHTML = `<div class="empty-state"><div class="empty-icon">✅</div><p>No issues detected!</p></div>`;
+      } else {
+        document.getElementById("issuesList").innerHTML = issues.map(issue => `
+          <div class="issue-item">
+            <span class="badge badge-${issue.severity}">${issue.severity}</span>
+            <div style="flex:1">
+              <div style="font-size:0.8rem;font-weight:600">${escapeHtml(issue.message)}</div>
+              ${issue.type ? `<div style="font-size:0.72rem;color:var(--text-muted);margin-top:0.2rem">${issue.type}</div>` : ""}
+            </div>
+            ${issue.line ? `<span class="issue-line">L${issue.line}</span>` : ""}
+          </div>`).join("");
+      }
+
+      // Metrics
+      const features = data.features || {};
+      document.getElementById("metricsBody").innerHTML = Object.entries(features).map(([k, v]) => `
+        <tr>
+          <td style="color:var(--text-secondary);text-transform:capitalize">${k.replace(/_/g, " ")}</td>
+          <td style="font-family:var(--font-mono);font-weight:600">${v}</td>
+        </tr>`).join("");
+
+      document.getElementById("resultsContainer").style.display = "block";
+      initTabs();
+    }
+
+    function renderMarkdown(text) {
+      return text
+        .replace(/## (.*)/g, '<h2>$1</h2>')
+        .replace(/### (.*)/g, '<h3>$1</h3>')
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+        .replace(/`([^`]+)`/g, '<code>$1</code>')
+        .replace(/```[\w]*\n([\s\S]*?)```/g, '<pre style="background:var(--bg-secondary);padding:1rem;border-radius:8px;overflow-x:auto;font-size:0.78rem;margin:0.75rem 0"><code>$1</code></pre>')
+        .replace(/^- (.*)/gm, '<li>$1</li>')
+        .replace(/(<li>[\s\S]*?<\/li>)+/g, '<ul>$&</ul>')
+        .replace(/\n\n/g, '</p><p>')
+        .replace(/^(?!<[hup])/gm, '<p>')
+        .replace(/(?<![>])\n/g, '<br>');
+    }
+
+    // Load from history if ?id= param
+    const params = new URLSearchParams(window.location.search);
+    const histId = params.get("id");
+    if (histId) {
+      API.get(`/api/analysis/${histId}`).then(({ ok, data }) => {
+        if (ok && data.source_code) {
+          textarea.value = data.source_code;
+          textarea.dispatchEvent(new Event("input"));
+          Toast.info("Code loaded from history — click Analyze to re-run");
+        }
+      });
+    }
+  </script>
+</body>
+
+</html>

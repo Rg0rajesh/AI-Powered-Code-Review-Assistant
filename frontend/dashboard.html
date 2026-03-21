@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard – LintVertex</title>
+  <link rel="stylesheet" href="css/main.css" />
+  <style>
+    .welcome-banner {
+      background: linear-gradient(135deg, var(--accent-light) 0%, var(--bg-card) 100%);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-lg);
+      padding: 1.75rem 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 2rem;
+      gap: 1rem;
+    }
+    .welcome-greeting { font-size: 1.5rem; font-weight: 800; letter-spacing: -0.03em; }
+    .welcome-sub { color: var(--text-secondary); font-size: 0.875rem; margin-top: 0.25rem; }
+
+    .quick-actions {
+      display: flex;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+
+    .history-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.875rem;
+    }
+    .history-table th {
+      text-align: left;
+      padding: 0.625rem 1rem;
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--border);
+    }
+    .history-table td {
+      padding: 0.875rem 1rem;
+      border-bottom: 1px solid var(--border);
+      color: var(--text-primary);
+    }
+    .history-table tr:last-child td { border-bottom: none; }
+    .history-table tr:hover td { background: var(--accent-light); }
+
+    .lang-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+      padding: 0.2rem 0.6rem;
+      border-radius: 100px;
+      background: var(--accent-light);
+      color: var(--accent);
+      font-size: 0.75rem;
+      font-weight: 600;
+      font-family: var(--font-mono);
+    }
+
+    .room-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 1rem 1.25rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      transition: all var(--transition);
+    }
+    .room-card:hover {
+      border-color: var(--accent);
+      transform: translateY(-1px);
+    }
+    .room-key {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      background: var(--bg-secondary);
+      padding: 0.2rem 0.5rem;
+      border-radius: var(--radius-sm);
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 3rem;
+      color: var(--text-muted);
+    }
+    .empty-state .empty-icon { font-size: 3rem; margin-bottom: 1rem; }
+    .empty-state p { font-size: 0.9rem; margin-bottom: 1.5rem; }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1rem;
+    }
+    .section-header h2 { font-size: 1.1rem; font-weight: 700; }
+
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+    @media (max-width: 900px) { .two-col { grid-template-columns: 1fr; } }
+
+    /* Skeleton rows */
+    .skel-row { height: 48px; margin-bottom: 0.5rem; border-radius: var(--radius-sm); }
+  </style>
+</head>
+<body>
+  <!-- Navbar -->
+  <nav class="navbar">
+    <a href="/index.html" class="logo-text">Lint<span>Vertex</span></a>
+    <ul class="nav-links">
+      <li><span data-user-name style="color:var(--text-secondary);font-size:0.875rem"></span></li>
+    </ul>
+    <div style="display:flex;align-items:center;gap:0.75rem">
+      <div class="theme-toggle">
+        <span class="theme-label">☀️</span>
+        <button class="toggle-track"><div class="toggle-thumb"></div></button>
+      </div>
+
+      <a href="/notifications.html" class="notif-bell" data-notif-count="0" title="Notifications">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+        </svg>
+        <span class="notif-badge" style="display:none">0</span>
+      </a>
+
+      <a href="#" data-logout class="btn btn-ghost btn-sm">Logout</a>
+    </div>
+  </nav>
+
+  <div class="layout">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:1.5rem;padding:0 0.25rem">
+        <div id="sidebarAvatar" style="width:36px;height:36px;border-radius:50%;background:var(--accent-light);border:2px solid var(--accent);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.8rem;overflow:hidden;flex-shrink:0"></div>
+        <div>
+          <div style="font-weight:700;font-size:0.875rem" data-user-name></div>
+          <div style="font-size:0.7rem;color:var(--text-muted)" id="sidebarRole"></div>
+        </div>
+      </div>
+
+      <ul class="sidebar-nav">
+        <li><a href="/dashboard.html" class="active">
+          <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+          Dashboard
+        </a></li>
+        <li><a href="/analyze.html">
+          <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+          Code Analysis
+        </a></li>
+        <li><a href="/history.html">
+          <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          History
+        </a></li>
+        <li><a href="/rooms.html">
+          <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          Discussion Rooms
+        </a></li>
+        <li><a href="/profile.html">
+          <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          Profile
+        </a></li>
+        <li><a href="/feedback.html">
+          <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          Feedback
+        </a></li>
+        <li><a href="/about.html">
+          <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+          About Us
+        </a></li>
+        <li class="admin-only" style="display:none"><a href="/admin.html">
+          <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          Admin Panel
+        </a></li>
+      </ul>
+
+      <div style="margin-top:auto;padding-top:2rem">
+        <a href="#" data-logout class="btn btn-ghost btn-sm btn-full">Sign Out</a>
+      </div>
+    </aside>
+
+    <!-- Main -->
+    <main class="main-content">
+      <!-- Welcome Banner -->
+      <div class="welcome-banner animate-slide-up">
+        <div>
+          <div class="welcome-greeting">Good to see you, <span id="greetName">there</span> 👋</div>
+          <div class="welcome-sub">Here's what's happening with your code reviews</div>
+        </div>
+        <div class="quick-actions">
+          <a href="/analyze.html" class="btn btn-primary">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+            Analyze Code
+          </a>
+          <a href="/rooms.html" class="btn btn-secondary">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            Join Room
+          </a>
+        </div>
+      </div>
+
+      <!-- Stats Grid -->
+      <div class="stats-grid stagger" id="statsGrid">
+        <div class="stat-card skeleton skel-row"></div>
+        <div class="stat-card skeleton skel-row"></div>
+        <div class="stat-card skeleton skel-row"></div>
+        <div class="stat-card skeleton skel-row"></div>
+      </div>
+
+      <!-- Two Column -->
+      <div class="two-col">
+        <!-- Recent Analyses -->
+        <div>
+          <div class="section-header">
+            <h2>Recent Analyses</h2>
+            <a href="/history.html" class="btn btn-ghost btn-sm">View All →</a>
+          </div>
+          <div class="card" style="padding:0;overflow:hidden">
+            <div id="analysesContainer">
+              <div style="padding:1.5rem">
+                <div class="skeleton skel-row"></div>
+                <div class="skeleton skel-row"></div>
+                <div class="skeleton skel-row"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Rooms -->
+        <div>
+          <div class="section-header">
+            <h2>Your Rooms</h2>
+            <a href="/rooms.html" class="btn btn-ghost btn-sm">Manage →</a>
+          </div>
+          <div id="roomsContainer" style="display:flex;flex-direction:column;gap:0.5rem">
+            <div class="skeleton skel-row"></div>
+            <div class="skeleton skel-row"></div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="js/app.js"></script>
+  <script>
+    Auth.requireAuth();
+
+    const LANG_ICONS = { python:"🐍", java:"☕", c:"⚙️", cpp:"🔧", unknown:"❓" };
+
+    async function loadDashboard() {
+      const user = Auth.getUser();
+      document.getElementById("greetName").textContent = user.username;
+      document.getElementById("sidebarRole").textContent = user.role === "admin" ? "Admin" : "Developer";
+
+      // Avatar
+      const av = document.getElementById("sidebarAvatar");
+      if (user.profile_image) {
+        av.innerHTML = `<img src="${user.profile_image}" style="width:100%;height:100%;object-fit:cover" />`;
+      } else {
+        av.textContent = user.username[0].toUpperCase();
+      }
+
+      // Load stats
+      const { ok, data } = await API.get("/api/profile/stats");
+      if (ok) {
+        document.getElementById("statsGrid").innerHTML = `
+          <div class="stat-card">
+            <div class="stat-value">${data.total_analyses}</div>
+            <div class="stat-label">Total Analyses</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value">${data.joined_rooms}</div>
+            <div class="stat-label">Rooms Joined</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value">${data.avg_quality_score || "—"}</div>
+            <div class="stat-label">Avg Quality Score</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value">${Object.keys(data.language_breakdown || {}).length}</div>
+            <div class="stat-label">Languages Used</div>
+          </div>`;
+      }
+
+      // Load analyses
+      const ah = await API.get("/api/analysis/history?limit=5");
+      const analyses = ah.data?.analyses || [];
+      const ac = document.getElementById("analysesContainer");
+      if (!analyses.length) {
+        ac.innerHTML = `<div class="empty-state"><div class="empty-icon">📝</div><p>No analyses yet</p><a href="/analyze.html" class="btn btn-primary btn-sm">Analyze Code</a></div>`;
+      } else {
+        ac.innerHTML = `<table class="history-table">
+          <thead><tr>
+            <th>Language</th><th>Grade</th><th>Issues</th><th>When</th><th></th>
+          </tr></thead>
+          <tbody>${analyses.map(a => `
+            <tr>
+              <td><span class="lang-pill">${LANG_ICONS[a.language] || "📄"} ${a.language.toUpperCase()}</span></td>
+              <td><span class="grade-badge grade-${a.grade}">${a.grade}</span></td>
+              <td>${a.syntax_errors} error${a.syntax_errors !== 1 ? "s":""}</td>
+              <td style="color:var(--text-muted)">${formatRelative(a.created_at)}</td>
+              <td><a href="/analyze.html?id=${a.id}" class="btn btn-ghost btn-sm">View</a></td>
+            </tr>`).join("")}
+          </tbody>
+        </table>`;
+      }
+
+      // Load rooms
+      const rh = await API.get("/api/rooms/my");
+      const rooms = rh.data?.rooms || [];
+      const rc = document.getElementById("roomsContainer");
+      if (!rooms.length) {
+        rc.innerHTML = `<div class="empty-state"><div class="empty-icon">💬</div><p>No rooms yet</p><a href="/rooms.html" class="btn btn-primary btn-sm">Create Room</a></div>`;
+      } else {
+        rc.innerHTML = rooms.slice(0, 4).map(r => `
+          <div class="room-card">
+            <div>
+              <div style="font-weight:600;font-size:0.875rem">${escapeHtml(r.name || "Unnamed Room")}</div>
+              <span class="room-key">${r.key}</span>
+            </div>
+            <a href="/rooms.html?key=${r.key}" class="btn btn-secondary btn-sm">Open →</a>
+          </div>`).join("");
+      }
+    }
+
+    loadDashboard();
+  </script>
+</body>
+</html>

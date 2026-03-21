@@ -1,0 +1,1576 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>About Us – LintVertex</title>
+  <link rel="stylesheet" href="css/main.css" />
+  <style>
+    /* ══════════════════════════════════════════════
+       ABOUT PAGE — Editorial Premium Layout
+       ══════════════════════════════════════════════ */
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    /* ── Scroll reveal system ── */
+    .reveal {
+      opacity: 0;
+      transform: translateY(32px);
+      transition: opacity 0.7s ease, transform 0.7s ease;
+    }
+
+    .reveal.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .reveal-left {
+      opacity: 0;
+      transform: translateX(-40px);
+      transition: opacity 0.7s ease, transform 0.7s ease;
+    }
+
+    .reveal-left.visible {
+      opacity: 1;
+      transform: translateX(0);
+    }
+
+    .reveal-right {
+      opacity: 0;
+      transform: translateX(40px);
+      transition: opacity 0.7s ease, transform 0.7s ease;
+    }
+
+    .reveal-right.visible {
+      opacity: 1;
+      transform: translateX(0);
+    }
+
+    /* delay helpers */
+    .delay-1 {
+      transition-delay: 0.1s;
+    }
+
+    .delay-2 {
+      transition-delay: 0.2s;
+    }
+
+    .delay-3 {
+      transition-delay: 0.3s;
+    }
+
+    .delay-4 {
+      transition-delay: 0.4s;
+    }
+
+    .delay-5 {
+      transition-delay: 0.5s;
+    }
+
+    /* ── Page wrapper ── */
+    .about-page {
+      padding-top: 64px;
+    }
+
+    /* ══════════════════════════════
+       HERO — Full bleed editorial
+       ══════════════════════════════ */
+    .about-hero {
+      min-height: 92vh;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero-left {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 6rem 4rem 6rem 5vw;
+      position: relative;
+      z-index: 2;
+    }
+
+    .hero-right {
+      background: var(--accent);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    [data-theme="dark"] .hero-right {
+      background: #111;
+      border-left: 1px solid #2a2a2a;
+    }
+
+    /* Animated geometric pattern on hero right */
+    .geo-pattern {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+    }
+
+    .geo-line {
+      position: absolute;
+      background: rgba(255, 255, 255, 0.06);
+      animation: geoFloat linear infinite;
+    }
+
+    [data-theme="dark"] .geo-line {
+      background: rgba(255, 255, 255, 0.04);
+    }
+
+    @keyframes geoFloat {
+      0% {
+        transform: translateY(0) rotate(0deg);
+        opacity: 0;
+      }
+
+      10% {
+        opacity: 1;
+      }
+
+      90% {
+        opacity: 1;
+      }
+
+      100% {
+        transform: translateY(-120vh) rotate(20deg);
+        opacity: 0;
+      }
+    }
+
+    .hero-visual-text {
+      font-family: var(--font-display);
+      font-size: clamp(5rem, 12vw, 10rem);
+      font-weight: 800;
+      letter-spacing: -0.06em;
+      line-height: 0.9;
+      color: rgba(255, 255, 255, 0.12);
+      position: absolute;
+      user-select: none;
+      writing-mode: vertical-rl;
+      right: 2rem;
+    }
+
+    [data-theme="dark"] .hero-visual-text {
+      color: rgba(255, 255, 255, 0.06);
+    }
+
+    .hero-stat-cluster {
+      position: absolute;
+      bottom: 3rem;
+      left: 3rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    .hero-stat-item {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .hero-stat-num {
+      font-size: 2.5rem;
+      font-weight: 800;
+      font-family: var(--font-mono);
+      color: white;
+      line-height: 1;
+    }
+
+    [data-theme="dark"] .hero-stat-num {
+      color: var(--text-primary);
+    }
+
+    .hero-stat-label {
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: rgba(255, 255, 255, 0.6);
+      margin-top: 0.15rem;
+    }
+
+    [data-theme="dark"] .hero-stat-label {
+      color: var(--text-muted);
+    }
+
+    /* eyebrow label */
+    .eyebrow {
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 1.25rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .eyebrow::before {
+      content: "";
+      display: inline-block;
+      width: 2rem;
+      height: 2px;
+      background: var(--accent);
+    }
+
+    .hero-headline {
+      font-size: clamp(2.75rem, 5vw, 4.5rem);
+      font-weight: 800;
+      letter-spacing: -0.04em;
+      line-height: 1.0;
+      margin-bottom: 1.5rem;
+    }
+
+    .hero-headline em {
+      font-style: italic;
+      color: var(--accent);
+    }
+
+    .hero-body {
+      font-size: 1.05rem;
+      color: var(--text-secondary);
+      line-height: 1.75;
+      max-width: 480px;
+      margin-bottom: 2.5rem;
+    }
+
+    /* ══════════════════════════════
+       MISSION STRIP
+       ══════════════════════════════ */
+    .mission-strip {
+      background: var(--accent);
+      padding: 4rem 5vw;
+      display: flex;
+      align-items: center;
+      gap: 4rem;
+      overflow: hidden;
+      position: relative;
+    }
+
+    [data-theme="dark"] .mission-strip {
+      background: #111;
+      border-top: 1px solid #222;
+      border-bottom: 1px solid #222;
+    }
+
+    .mission-strip::before {
+      content: "MISSION";
+      position: absolute;
+      right: -1rem;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 8rem;
+      font-weight: 800;
+      letter-spacing: -0.06em;
+      color: rgba(255, 255, 255, 0.06);
+      pointer-events: none;
+      font-family: var(--font-display);
+    }
+
+    .mission-quote {
+      font-size: clamp(1.4rem, 2.5vw, 2rem);
+      font-weight: 700;
+      color: white;
+      letter-spacing: -0.02em;
+      line-height: 1.35;
+      flex: 1;
+      position: relative;
+      z-index: 1;
+    }
+
+    [data-theme="dark"] .mission-quote {
+      color: var(--text-primary);
+    }
+
+    .mission-quote span {
+      color: rgba(255, 255, 255, 0.5);
+    }
+
+    [data-theme="dark"] .mission-quote span {
+      color: var(--text-muted);
+    }
+
+    .mission-divider {
+      width: 2px;
+      height: 80px;
+      background: rgba(255, 255, 255, 0.2);
+      flex-shrink: 0;
+    }
+
+    [data-theme="dark"] .mission-divider {
+      background: #333;
+    }
+
+    .mission-sub {
+      flex: 0 0 300px;
+      font-size: 0.9rem;
+      color: rgba(255, 255, 255, 0.7);
+      line-height: 1.6;
+      position: relative;
+      z-index: 1;
+    }
+
+    [data-theme="dark"] .mission-sub {
+      color: var(--text-muted);
+    }
+
+    /* ══════════════════════════════
+       STORY SECTION
+       ══════════════════════════════ */
+    .story-section {
+      padding: 7rem 5vw;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .story-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 5rem;
+      align-items: center;
+    }
+
+    .story-label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 1rem;
+    }
+
+    .story-title {
+      font-size: clamp(2rem, 3.5vw, 2.75rem);
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      line-height: 1.1;
+      margin-bottom: 1.5rem;
+    }
+
+    .story-body {
+      font-size: 0.95rem;
+      color: var(--text-secondary);
+      line-height: 1.8;
+    }
+
+    .story-body+.story-body {
+      margin-top: 1rem;
+    }
+
+    /* Code card decoration */
+    .story-code-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      box-shadow: var(--shadow-lg);
+      position: relative;
+    }
+
+    .story-code-card::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--accent), transparent);
+    }
+
+    .code-card-bar {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.75rem 1rem;
+      background: var(--bg-secondary);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .code-card-bar .dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+    }
+
+    .dot-r {
+      background: #ff5f56;
+    }
+
+    .dot-y {
+      background: #ffbd2e;
+    }
+
+    .dot-g {
+      background: #27c93f;
+    }
+
+    .code-card-body {
+      padding: 1.5rem;
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      line-height: 1.9;
+      color: var(--text-primary);
+    }
+
+    .cc-kw {
+      color: var(--accent);
+      font-weight: 700;
+    }
+
+    .cc-fn {
+      color: #3a86c0;
+    }
+
+    .cc-str {
+      color: #c07840;
+    }
+
+    .cc-cmt {
+      color: var(--text-muted);
+      font-style: italic;
+    }
+
+    .cc-num {
+      color: #c05a8a;
+    }
+
+    .cc-ok {
+      color: var(--success);
+      font-weight: 700;
+    }
+
+    .score-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: rgba(39, 174, 96, 0.12);
+      border: 1px solid rgba(39, 174, 96, 0.25);
+      border-radius: var(--radius-md);
+      padding: 0.625rem 1rem;
+      margin-top: 1rem;
+      font-size: 0.875rem;
+    }
+
+    .score-num {
+      font-family: var(--font-mono);
+      font-weight: 800;
+      font-size: 1.25rem;
+      color: var(--success);
+    }
+
+    /* ══════════════════════════════
+       VALUES GRID
+       ══════════════════════════════ */
+    .values-section {
+      padding: 5rem 5vw 7rem;
+      background: var(--bg-secondary);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .values-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .values-header {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      margin-bottom: 3.5rem;
+      gap: 2rem;
+    }
+
+    .values-title {
+      font-size: clamp(2rem, 3.5vw, 3rem);
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      line-height: 1.1;
+    }
+
+    .values-desc {
+      max-width: 320px;
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+      line-height: 1.6;
+    }
+
+    .values-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.25rem;
+    }
+
+    .value-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 2rem;
+      position: relative;
+      overflow: hidden;
+      transition: all 0.3s ease;
+      cursor: default;
+    }
+
+    .value-card:hover {
+      transform: translateY(-4px);
+      border-color: var(--accent);
+      box-shadow: var(--shadow-accent);
+    }
+
+    .value-card::after {
+      content: "";
+      position: absolute;
+      bottom: 0;
+      right: 0;
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      background: var(--accent-light);
+      transform: translate(30px, 30px);
+      transition: all 0.3s ease;
+    }
+
+    .value-card:hover::after {
+      transform: translate(10px, 10px);
+    }
+
+    .value-number {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      letter-spacing: 0.1em;
+      margin-bottom: 1rem;
+    }
+
+    .value-icon {
+      font-size: 2rem;
+      margin-bottom: 0.875rem;
+    }
+
+    .value-name {
+      font-size: 1.05rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+      letter-spacing: -0.02em;
+    }
+
+    .value-desc {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      line-height: 1.65;
+    }
+
+    /* ══════════════════════════════
+       TIMELINE
+       ══════════════════════════════ */
+    .timeline-section {
+      padding: 7rem 5vw;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    .timeline-title {
+      font-size: clamp(2rem, 3.5vw, 2.75rem);
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      margin-bottom: 4rem;
+      text-align: center;
+    }
+
+    .timeline {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+
+    .timeline::before {
+      content: "";
+      position: absolute;
+      left: 120px;
+      top: 0;
+      bottom: 0;
+      width: 1px;
+      background: linear-gradient(to bottom, transparent, var(--border) 10%, var(--border) 90%, transparent);
+    }
+
+    .timeline-item {
+      display: grid;
+      grid-template-columns: 120px 1fr;
+      gap: 2.5rem;
+      padding: 1.75rem 0;
+      position: relative;
+    }
+
+    .timeline-item:not(:last-child) {
+      border-bottom: 1px dashed var(--border);
+    }
+
+    .timeline-year {
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      padding-top: 0.15rem;
+      text-align: right;
+      padding-right: 1.5rem;
+      position: relative;
+    }
+
+    /* Dot on the line */
+    .timeline-year::after {
+      content: "";
+      position: absolute;
+      right: -5px;
+      top: 0.45rem;
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: var(--accent);
+      border: 2px solid var(--bg-primary);
+      box-shadow: 0 0 0 2px var(--accent);
+    }
+
+    .timeline-content {
+      padding-left: 0.5rem;
+    }
+
+    .timeline-event {
+      font-size: 1rem;
+      font-weight: 700;
+      margin-bottom: 0.35rem;
+      letter-spacing: -0.01em;
+    }
+
+    .timeline-detail {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      line-height: 1.6;
+    }
+
+    .timeline-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+      padding: 0.18rem 0.6rem;
+      border-radius: 100px;
+      font-size: 0.68rem;
+      font-weight: 700;
+      margin-top: 0.6rem;
+      background: var(--accent-light);
+      color: var(--accent);
+      border: 1px solid var(--glass-border);
+    }
+
+    /* ══════════════════════════════
+       TEAM SECTION
+       ══════════════════════════════ */
+    .team-section {
+      padding: 5rem 5vw 7rem;
+      background: var(--bg-secondary);
+      border-top: 1px solid var(--border);
+    }
+
+    .team-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .team-header {
+      text-align: center;
+      margin-bottom: 4rem;
+    }
+
+    .team-title {
+      font-size: clamp(2rem, 3.5vw, 2.75rem);
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      margin-bottom: 0.75rem;
+    }
+
+    .team-sub {
+      color: var(--text-secondary);
+      font-size: 0.95rem;
+      max-width: 440px;
+      margin: 0 auto;
+    }
+
+    .team-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .team-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 2rem;
+      text-align: center;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .team-card:hover {
+      transform: translateY(-6px);
+      box-shadow: var(--shadow-md);
+      border-color: var(--accent);
+    }
+
+    .team-avatar {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      margin: 0 auto 1.25rem;
+      border: 3px solid var(--accent);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2rem;
+      background: var(--accent-light);
+      position: relative;
+    }
+
+    /* Subtle glow on hover */
+    .team-card:hover .team-avatar {
+      box-shadow: 0 0 0 4px var(--accent-glow);
+    }
+
+    .team-name {
+      font-size: 1.05rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-bottom: 0.25rem;
+    }
+
+    .team-role {
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--accent);
+      margin-bottom: 0.875rem;
+    }
+
+    .team-bio {
+      font-size: 0.82rem;
+      color: var(--text-secondary);
+      line-height: 1.6;
+    }
+
+    .team-skills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.35rem;
+      justify-content: center;
+      margin-top: 1rem;
+    }
+
+    .team-skill {
+      padding: 0.18rem 0.6rem;
+      border: 1px solid var(--border);
+      border-radius: 100px;
+      font-size: 0.68rem;
+      font-weight: 600;
+      font-family: var(--font-mono);
+      color: var(--text-muted);
+    }
+
+    /* ══════════════════════════════
+       TECH STACK SECTION
+       ══════════════════════════════ */
+    .tech-section {
+      padding: 7rem 5vw;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .tech-header {
+      text-align: center;
+      margin-bottom: 4rem;
+    }
+
+    .tech-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 1rem;
+    }
+
+    .tech-item {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 1.5rem 1rem;
+      text-align: center;
+      transition: all 0.25s ease;
+      cursor: default;
+    }
+
+    .tech-item:hover {
+      border-color: var(--accent);
+      background: var(--accent-light);
+      transform: scale(1.03);
+    }
+
+    .tech-icon {
+      font-size: 2rem;
+      margin-bottom: 0.625rem;
+    }
+
+    .tech-name {
+      font-size: 0.875rem;
+      font-weight: 700;
+      margin-bottom: 0.2rem;
+    }
+
+    .tech-category {
+      font-size: 0.68rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      font-weight: 600;
+    }
+
+    /* ══════════════════════════════
+       CTA BAND
+       ══════════════════════════════ */
+    .cta-band {
+      margin: 0 5vw 7rem;
+      border-radius: var(--radius-xl);
+      background: var(--accent);
+      padding: 4rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 2rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    [data-theme="dark"] .cta-band {
+      background: #111;
+      border: 1px solid #2a2a2a;
+    }
+
+    .cta-band::before {
+      content: "";
+      position: absolute;
+      right: -80px;
+      top: -80px;
+      width: 300px;
+      height: 300px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.06);
+    }
+
+    .cta-band-title {
+      font-size: clamp(1.5rem, 3vw, 2.25rem);
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      color: white;
+      line-height: 1.15;
+    }
+
+    [data-theme="dark"] .cta-band-title {
+      color: var(--text-primary);
+    }
+
+    .cta-band-sub {
+      font-size: 0.9rem;
+      color: rgba(255, 255, 255, 0.7);
+      margin-top: 0.5rem;
+    }
+
+    [data-theme="dark"] .cta-band-sub {
+      color: var(--text-muted);
+    }
+
+    .cta-band-actions {
+      display: flex;
+      gap: 0.75rem;
+      flex-shrink: 0;
+    }
+
+    .btn-white {
+      background: white;
+      color: var(--accent);
+      border: none;
+      font-weight: 700;
+    }
+
+    .btn-white:hover {
+      background: var(--bg-secondary);
+      transform: translateY(-2px);
+    }
+
+    [data-theme="dark"] .btn-white {
+      background: var(--text-primary);
+      color: var(--bg-primary);
+    }
+
+    .btn-outline-white {
+      background: transparent;
+      color: white;
+      border: 1.5px solid rgba(255, 255, 255, 0.4);
+      font-weight: 700;
+    }
+
+    .btn-outline-white:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: white;
+      transform: translateY(-2px);
+    }
+
+    [data-theme="dark"] .btn-outline-white {
+      color: var(--text-primary);
+      border-color: var(--border);
+    }
+
+    /* ══════════════════════════════
+       FOOTER
+       ══════════════════════════════ */
+    .about-footer {
+      padding: 2rem 5vw;
+      border-top: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    .footer-links {
+      display: flex;
+      gap: 1.5rem;
+    }
+
+    .footer-links a {
+      color: var(--text-muted);
+      text-decoration: none;
+      transition: color var(--transition);
+    }
+
+    .footer-links a:hover {
+      color: var(--text-primary);
+    }
+
+    /* ══════════════════════════════
+       RESPONSIVE
+       ══════════════════════════════ */
+    @media (max-width: 900px) {
+      .about-hero {
+        grid-template-columns: 1fr;
+        min-height: auto;
+      }
+
+      .hero-left {
+        padding: 4rem 2rem;
+      }
+
+      .hero-right {
+        min-height: 320px;
+      }
+
+      .story-grid {
+        grid-template-columns: 1fr;
+        gap: 2.5rem;
+      }
+
+      .values-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .values-header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .mission-strip {
+        flex-direction: column;
+        gap: 2rem;
+      }
+
+      .mission-divider {
+        width: 60px;
+        height: 2px;
+      }
+
+      .mission-sub {
+        flex: 1;
+      }
+
+      .cta-band {
+        flex-direction: column;
+        text-align: center;
+      }
+
+      .cta-band-actions {
+        justify-content: center;
+      }
+
+      .about-footer {
+        flex-direction: column;
+        gap: 1rem;
+        text-align: center;
+      }
+
+      .timeline::before {
+        left: 80px;
+      }
+
+      .timeline-item {
+        grid-template-columns: 80px 1fr;
+      }
+    }
+
+    @media (max-width: 600px) {
+      .values-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .hero-left {
+        padding: 3rem 1.5rem;
+      }
+
+      .timeline-section,
+      .story-section,
+      .tech-section {
+        padding: 4rem 1.5rem;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- ══ NAVBAR ══ -->
+  <nav class="navbar">
+    <a href="/index.html" class="logo-text">Lint<span>Vertex</span></a>
+    <ul class="nav-links">
+      <li><a href="/index.html">Home</a></li>
+      <li class="logged-in-only" style="display:none"><a href="/dashboard.html">Dashboard</a></li>
+      <li><a href="/about.html" class="active">About</a></li>
+      <li class="logged-out-only"><a href="/login.html">Login</a></li>
+      <li class="logged-out-only"><a href="/signup.html" class="btn btn-primary btn-sm">Get Started</a></li>
+    </ul>
+    <div style="display:flex;align-items:center;gap:0.75rem">
+      <div class="theme-toggle">
+        <span class="theme-label">☀️</span>
+        <button class="toggle-track" aria-label="Toggle theme">
+          <div class="toggle-thumb"></div>
+        </button>
+      </div>
+
+      <a href="/notifications.html" class="notif-bell logged-in-only" style="display:none" data-notif-count="0" title="Notifications">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+        </svg>
+        <span class="notif-badge" style="display:none">0</span>
+      </a>
+
+      <a href="#" data-logout class="btn btn-ghost btn-sm logged-in-only" style="display:none">Logout</a>
+    </div>
+  </nav>
+
+  <div class="about-page">
+
+    <!-- ══ HERO ══ -->
+    <section class="about-hero">
+      <div class="hero-left">
+        <div class="eyebrow reveal">About LintVertex</div>
+        <h1 class="hero-headline reveal delay-1">
+          We make code<br />
+          <em>speak clearly.</em>
+        </h1>
+        <p class="hero-body reveal delay-2">
+          LintVertex was built by developers who were tired of slow, expensive,
+          and shallow code review tools. We combined Gemini AI, machine learning,
+          and real-time collaboration into one platform — so every developer can
+          ship better code, faster.
+        </p>
+        <div style="display:flex;gap:1rem;flex-wrap:wrap" class="reveal delay-3">
+          <a href="/signup.html" class="btn btn-primary">Start for Free</a>
+          <a href="#story" class="btn btn-ghost">Our Story ↓</a>
+        </div>
+      </div>
+
+      <div class="hero-right">
+        <!-- Animated geometric lines -->
+        <div class="geo-pattern" id="geoPattern"></div>
+        <div class="hero-visual-text">LV</div>
+
+        <div class="hero-stat-cluster">
+          <div class="hero-stat-item reveal delay-1">
+            <span class="hero-stat-num">4</span>
+            <span class="hero-stat-label">Languages Supported</span>
+          </div>
+          <div class="hero-stat-item reveal delay-2">
+            <span class="hero-stat-num">2</span>
+            <span class="hero-stat-label">AI Providers</span>
+          </div>
+          <div class="hero-stat-item reveal delay-3">
+            <span class="hero-stat-num">10+</span>
+            <span class="hero-stat-label">Security Layers</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══ MISSION STRIP ══ -->
+    <div class="mission-strip">
+      <div class="mission-quote reveal-left">
+        "Code review shouldn't be a bottleneck —<br />
+        <span>it should be a superpower.</span>"
+      </div>
+      <div class="mission-divider"></div>
+      <div class="mission-sub reveal-right">
+        Our mission is to democratize professional-grade code analysis by putting
+        AI and ML directly in the hands of every developer, not just teams with
+        expensive tooling budgets.
+      </div>
+    </div>
+
+    <!-- ══ STORY ══ -->
+    <section class="story-section" id="story">
+      <div class="story-grid">
+        <div class="reveal-left">
+          <div class="story-label">Our Story</div>
+          <h2 class="story-title">Born from developer frustration</h2>
+          <p class="story-body">
+            LintVertex started as a weekend project — a simple script to catch
+            the same bugs we kept writing over and over. Python bare excepts.
+            Java string comparisons with <code>==</code>. Buffer overflows in C.
+          </p>
+          <p class="story-body">
+            We asked: <em>what if an AI could catch these before a human reviewer
+              even looked?</em> That question became LintVertex — a full SaaS platform
+            that combines Gemini AI, ML quality scoring, and real-time team
+            discussion rooms.
+          </p>
+          <p class="story-body">
+            Today, LintVertex auto-detects your language, scores your code on four
+            quality dimensions, surfaces bugs and security issues, and lets your
+            team discuss fixes in real-time — all in one place.
+          </p>
+        </div>
+
+        <div class="reveal-right delay-2">
+          <div class="story-code-card">
+            <div class="code-card-bar">
+              <div class="dot dot-r"></div>
+              <div class="dot dot-y"></div>
+              <div class="dot dot-g"></div>
+              <span
+                style="margin-left:auto;font-size:0.72rem;color:var(--text-muted);font-family:var(--font-mono)">review.py
+                — Python</span>
+            </div>
+            <div class="code-card-body">
+              <span class="cc-cmt"># Before LintVertex 😓</span>
+              <span class="cc-kw">def</span> <span class="cc-fn">get_user</span>(id):
+              <span class="cc-kw">try</span>:
+              <span class="cc-kw">return</span> db.query(id)
+              <span class="cc-kw">except</span>: <span class="cc-cmt"># bare!</span>
+              <span class="cc-kw">pass</span> <span class="cc-cmt"># silent fail</span>
+
+              <span class="cc-cmt"># After LintVertex ✅</span>
+              <span class="cc-kw">def</span> <span class="cc-fn">get_user</span>(id: <span class="cc-str">int</span>) ->
+              <span class="cc-str">User | None</span>:
+              <span class="cc-str">"""Fetch user by ID."""</span>
+              <span class="cc-kw">try</span>:
+              <span class="cc-kw">return</span> db.query(id)
+              <span class="cc-kw">except</span> DatabaseError <span class="cc-kw">as</span> e:
+              logger.error(<span class="cc-str">f"Query failed: {e}"</span>)
+              <span class="cc-kw">return None</span>
+            </div>
+            <div style="padding:0 1.5rem 1.25rem">
+              <div class="score-badge">
+                <span class="score-num">91</span>
+                <span style="font-size:0.8rem;color:var(--text-secondary)">Quality Score · Grade <strong
+                    style="color:var(--grade-a)">A</strong></span>
+                <span class="cc-ok">↑ from 58</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══ VALUES ══ -->
+    <section class="values-section">
+      <div class="values-inner">
+        <div class="values-header reveal">
+          <div>
+            <div class="story-label">What We Stand For</div>
+            <h2 class="values-title">Our core<br />principles</h2>
+          </div>
+          <p class="values-desc">
+            These aren't posters on a wall. They're the decisions we make every
+            day when designing features, writing security policies, and building APIs.
+          </p>
+        </div>
+
+        <div class="values-grid">
+          <div class="value-card reveal delay-1">
+            <div class="value-number">01</div>
+            <div class="value-icon">🔒</div>
+            <div class="value-name">Security First</div>
+            <p class="value-desc">API keys never touch the frontend. Admin tokens are IP-bound, short-lived, and
+              separately signed. Every action is audited.</p>
+          </div>
+          <div class="value-card reveal delay-2">
+            <div class="value-number">02</div>
+            <div class="value-icon">🤖</div>
+            <div class="value-name">AI That Explains</div>
+            <p class="value-desc">We don't just flag issues — we explain them. Gemini AI provides context, examples, and
+              actionable improvements in plain language.</p>
+          </div>
+          <div class="value-card reveal delay-3">
+            <div class="value-number">03</div>
+            <div class="value-icon">👥</div>
+            <div class="value-name">Human Collaboration</div>
+            <p class="value-desc">Our discussion rooms are deliberately human-only. Code review is a conversation, not a
+              chatbot session.</p>
+          </div>
+          <div class="value-card reveal delay-1">
+            <div class="value-number">04</div>
+            <div class="value-icon">⚡</div>
+            <div class="value-name">Speed Without Shortcuts</div>
+            <p class="value-desc">Analysis in seconds, not minutes. But never by cutting corners on accuracy, security,
+              or the quality of our ML models.</p>
+          </div>
+          <div class="value-card reveal delay-2">
+            <div class="value-number">05</div>
+            <div class="value-icon">🌐</div>
+            <div class="value-name">Offline Resilience</div>
+            <p class="value-desc">If Gemini is unavailable, Ollama steps in locally. Your workflow doesn't stop because
+              a cloud API has a bad day.</p>
+          </div>
+          <div class="value-card reveal delay-3">
+            <div class="value-number">06</div>
+            <div class="value-icon">📊</div>
+            <div class="value-name">Measurable Quality</div>
+            <p class="value-desc">Vague feedback is worthless. We give you a score, a grade, a breakdown — so you know
+              exactly where to improve.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══ TIMELINE ══ -->
+    <section class="timeline-section">
+      <h2 class="timeline-title reveal">How we got here</h2>
+
+      <div class="timeline">
+        <div class="timeline-item reveal">
+          <div class="timeline-year">Phase 1</div>
+          <div class="timeline-content">
+            <div class="timeline-event">The Idea</div>
+            <p class="timeline-detail">A weekend script to catch Python bare excepts and Java string comparison bugs.
+              Just a personal tool — nothing more.</p>
+            <span class="timeline-tag">🐍 Python CLI</span>
+          </div>
+        </div>
+        <div class="timeline-item reveal delay-1">
+          <div class="timeline-year">Phase 2</div>
+          <div class="timeline-content">
+            <div class="timeline-event">Language Detection Added</div>
+            <p class="timeline-detail">Extended to Java, C, and C++. Built the rule-based hybrid detector so users don't
+              have to specify the language manually.</p>
+            <span class="timeline-tag">☕ Multi-language</span>
+          </div>
+        </div>
+        <div class="timeline-item reveal delay-2">
+          <div class="timeline-year">Phase 3</div>
+          <div class="timeline-content">
+            <div class="timeline-event">ML Quality Scoring</div>
+            <p class="timeline-detail">Integrated Random Forest and Gradient Boosting models for scoring readability,
+              maintainability, reliability, and best practices.</p>
+            <span class="timeline-tag">🧠 ML Pipeline</span>
+          </div>
+        </div>
+        <div class="timeline-item reveal delay-3">
+          <div class="timeline-year">Phase 4</div>
+          <div class="timeline-content">
+            <div class="timeline-event">Gemini AI Integration</div>
+            <p class="timeline-detail">Connected to Google Gemini 1.5 Flash for deep contextual analysis. Added Ollama
+              fallback for offline environments.</p>
+            <span class="timeline-tag">🤖 Gemini + Ollama</span>
+          </div>
+        </div>
+        <div class="timeline-item reveal delay-4">
+          <div class="timeline-year">Phase 5</div>
+          <div class="timeline-content">
+            <div class="timeline-event">SaaS Platform Launch</div>
+            <p class="timeline-detail">Full multi-user platform with Supabase auth, discussion rooms via SSE, admin
+              panel, and premium dual-theme UI.</p>
+            <span class="timeline-tag">🚀 Production</span>
+          </div>
+        </div>
+        <div class="timeline-item reveal delay-5">
+          <div class="timeline-year">Now</div>
+          <div class="timeline-content">
+            <div class="timeline-event">Hardened Security & You</div>
+            <p class="timeline-detail">10-layer admin security, IP-bound tokens, brute-force lockout, full audit trails
+              — and a growing community of developers.</p>
+            <span class="timeline-tag">🛡️ Enterprise Ready</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══ TEAM ══ -->
+    <section class="team-section">
+      <div class="team-inner">
+        <div class="team-header reveal">
+          <div class="story-label" style="text-align:center;justify-content:center;display:flex;gap:0.5rem">
+            <span style="display:inline-block;width:2rem;height:2px;background:var(--accent);align-self:center"></span>
+            The Team
+            <span style="display:inline-block;width:2rem;height:2px;background:var(--accent);align-self:center"></span>
+          </div>
+          <h2 class="team-title">Built by developers,<br />for developers</h2>
+          <p class="team-sub">A small team with an obsession for clean code, developer experience, and AI that actually
+            helps.</p>
+        </div>
+
+        <div class="team-grid">
+          <div class="team-card reveal delay-1">
+            <div class="team-avatar">🧠</div>
+            <div class="team-name">Ashish</div>
+            <div class="team-role">Founder & AI Lead</div>
+            <p class="team-bio">Former ML engineer. Designed the Gemini + Ollama pipeline and LangGraph orchestration
+              layer.</p>
+            <div class="team-skills">
+              <span class="team-skill">Python</span>
+              <span class="team-skill">LangChain</span>
+              <span class="team-skill">Gemini API</span>
+            </div>
+          </div>
+
+          <div class="team-card reveal delay-2">
+            <div class="team-avatar">🔒</div>
+            <div class="team-name">manikanta</div>
+            <div class="team-role">Security Engineer</div>
+            <p class="team-bio">Designed the 10-layer admin security system — JWT separation, IP binding, rate limiting,
+              and audit trails.</p>
+            <div class="team-skills">
+              <span class="team-skill">Flask</span>
+              <span class="team-skill">JWT</span>
+              <span class="team-skill">bcrypt</span>
+            </div>
+          </div>
+
+          <div class="team-card reveal delay-3">
+            <div class="team-avatar">🎨</div>
+            <div class="team-name">jeshweer</div>
+            <div class="team-role">Frontend & UX</div>
+            <p class="team-bio">Crafted the premium dual-theme UI system — Ivory/Olive and Black/White — with every
+              animation hand-tuned.</p>
+            <div class="team-skills">
+              <span class="team-skill">CSS</span>
+              <span class="team-skill">Vanilla JS</span>
+              <span class="team-skill">SSE</span>
+            </div>
+          </div>
+
+          <div class="team-card reveal delay-4">
+            <div class="team-avatar">📊</div>
+            <div class="team-name">Phanindra</div>
+            <div class="team-role">ML & Data</div>
+            <p class="team-bio">Built and tuned the Random Forest quality scoring models, TF-IDF feature extraction, and
+              language auto-detection.</p>
+            <div class="team-skills">
+              <span class="team-skill">scikit-learn</span>
+              <span class="team-skill">XGBoost</span>
+              <span class="team-skill">NumPy</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══ TECH STACK ══ -->
+    <section class="tech-section">
+      <div class="tech-header reveal">
+        <div class="story-label" style="justify-content:center;display:flex;gap:0.5rem">
+          <span style="display:inline-block;width:2rem;height:2px;background:var(--accent);align-self:center"></span>
+          Technology
+          <span style="display:inline-block;width:2rem;height:2px;background:var(--accent);align-self:center"></span>
+        </div>
+        <h2 class="values-title" style="text-align:center;margin-top:0.5rem">What powers LintVertex</h2>
+      </div>
+
+      <div class="tech-grid">
+        <div class="tech-item reveal delay-1">
+          <div class="tech-icon">🤖</div>
+          <div class="tech-name">Gemini 2.5 Flash</div>
+          <div class="tech-category">AI Engine</div>
+        </div>
+        <div class="tech-item reveal delay-1">
+          <div class="tech-icon">🦙</div>
+          <div class="tech-name">Ollama</div>
+          <div class="tech-category">Local Fallback</div>
+        </div>
+        <div class="tech-item reveal delay-2">
+          <div class="tech-icon">🧠</div>
+          <div class="tech-name">scikit-learn</div>
+          <div class="tech-category">ML Models</div>
+        </div>
+        <div class="tech-item reveal delay-2">
+          <div class="tech-icon">🔗</div>
+          <div class="tech-name">LangGraph</div>
+          <div class="tech-category">AI Pipeline</div>
+        </div>
+        <div class="tech-item reveal delay-3">
+          <div class="tech-icon">🐍</div>
+          <div class="tech-name">Flask</div>
+          <div class="tech-category">Backend</div>
+        </div>
+        <div class="tech-item reveal delay-3">
+          <div class="tech-icon">🗄️</div>
+          <div class="tech-name">Supabase</div>
+          <div class="tech-category">Database + Auth</div>
+        </div>
+        <div class="tech-item reveal delay-4">
+          <div class="tech-icon">📡</div>
+          <div class="tech-name">SSE</div>
+          <div class="tech-category">Real-Time Chat</div>
+        </div>
+        <div class="tech-item reveal delay-4">
+          <div class="tech-icon">🚀</div>
+          <div class="tech-name">Gunicorn</div>
+          <div class="tech-category">Production Server</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══ CTA BAND ══ -->
+    <div class="cta-band reveal">
+      <div>
+        <div class="cta-band-title">Ready to write better code?</div>
+        <div class="cta-band-sub">Free to get started. No credit card. No limits on analyses.</div>
+      </div>
+      <div class="cta-band-actions">
+        <a href="/signup.html" class="btn btn-white btn-lg">Create Free Account</a>
+        <a href="/login.html" class="btn btn-outline-white btn-lg">Sign In →</a>
+      </div>
+    </div>
+
+    <!-- ══ FOOTER ══ -->
+    <footer class="about-footer">
+      <div class="logo-text" style="font-size:1.1rem">Lint<span>Vertex</span></div>
+      <div class="footer-links">
+        <a href="/index.html">Home</a>
+        <a href="/profile.html">Profile</a>
+        <a href="/about.html">About</a>
+        <a href="/login.html">Login</a>
+        <a href="/signup.html">Sign Up</a>
+      </div>
+      <div>© 2025 LintVertex · AI-Powered Code Review</div>
+    </footer>
+
+  </div><!-- /about-page -->
+
+  <script src="js/app.js"></script>
+  <script>
+    // ── Scroll Reveal ──────────────────────────────────────────
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add("visible");
+        }
+      });
+    }, { threshold: 0.12, rootMargin: "0px 0px -40px 0px" });
+
+    document.querySelectorAll(".reveal, .reveal-left, .reveal-right").forEach(el => {
+      observer.observe(el);
+    });
+
+    // Trigger elements already in view on load
+    setTimeout(() => {
+      document.querySelectorAll(".reveal, .reveal-left, .reveal-right").forEach(el => {
+        const rect = el.getBoundingClientRect();
+        if (rect.top < window.innerHeight) el.classList.add("visible");
+      });
+    }, 100);
+
+    // ── Geometric Line Animation ───────────────────────────────
+    function spawnGeoLine() {
+      const pattern = document.getElementById("geoPattern");
+      if (!pattern) return;
+
+      const line = document.createElement("div");
+      line.className = "geo-line";
+
+      const isHoriz = Math.random() > 0.5;
+      const size = Math.random() * 200 + 60;
+      const thickness = Math.random() * 1.5 + 0.5;
+      const startPos = Math.random() * 100;
+      const duration = Math.random() * 12 + 8;
+      const delay = Math.random() * 4;
+
+      if (isHoriz) {
+        line.style.cssText = `
+          width: ${size}px; height: ${thickness}px;
+          left: ${startPos}%; bottom: -10px;
+          animation-duration: ${duration}s;
+          animation-delay: ${delay}s;`;
+      } else {
+        line.style.cssText = `
+          width: ${thickness}px; height: ${size}px;
+          left: ${startPos}%; bottom: -10px;
+          animation-duration: ${duration}s;
+          animation-delay: ${delay}s;`;
+      }
+
+      pattern.appendChild(line);
+      setTimeout(() => line.remove(), (duration + delay) * 1000);
+    }
+
+    // Spawn initial lines
+    for (let i = 0; i < 12; i++) spawnGeoLine();
+    setInterval(spawnGeoLine, 1200);
+
+    // ── Counter Animation ──────────────────────────────────────
+    function animateCounter(el, target, duration = 1500) {
+      const start = performance.now();
+      const update = (time) => {
+        const elapsed = time - start;
+        const progress = Math.min(elapsed / duration, 1);
+        const eased = 1 - Math.pow(1 - progress, 3);
+        const isFloat = target % 1 !== 0;
+        el.textContent = isFloat
+          ? (eased * target).toFixed(1)
+          : Math.round(eased * target) + (el.dataset.suffix || "");
+        if (progress < 1) requestAnimationFrame(update);
+      };
+      requestAnimationFrame(update);
+    }
+
+    const counterObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting && !entry.target.dataset.counted) {
+          entry.target.dataset.counted = "1";
+          const val = parseFloat(entry.target.dataset.count);
+          animateCounter(entry.target, val);
+        }
+      });
+    }, { threshold: 0.5 });
+
+    document.querySelectorAll("[data-count]").forEach(el => counterObserver.observe(el));
+  </script>
+</body>
+
+</html>

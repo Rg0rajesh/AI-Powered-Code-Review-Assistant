@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Profile – LintVertex</title>
+  <link rel="stylesheet" href="css/main.css" />
+  <style>
+    .profile-grid {
+      display: grid;
+      grid-template-columns: 300px 1fr;
+      gap: 2rem;
+    }
+
+    @media(max-width:900px) {
+      .profile-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .profile-avatar {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      margin: 0 auto 1rem;
+      border: 3px solid var(--accent);
+      background: var(--accent-light);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2.5rem;
+      overflow: hidden;
+      cursor: pointer;
+    }
+
+    .profile-avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .section-toggle {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      padding: 0.875rem 0;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 1.25rem;
+    }
+
+    .section-toggle h3 {
+      font-size: 0.95rem;
+      font-weight: 700;
+      margin: 0;
+    }
+
+    .toggle-arrow {
+      transition: transform 0.2s;
+    }
+
+    .toggle-arrow.open {
+      transform: rotate(180deg);
+    }
+
+    .otp-step {
+      display: none;
+    }
+
+    .otp-step.active {
+      display: block;
+    }
+
+    .step-indicator {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .step-dot {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      border: 2px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      transition: all 0.3s;
+      flex-shrink: 0;
+    }
+
+    .step-dot.active {
+      border-color: var(--accent);
+      background: var(--accent);
+      color: var(--bg-primary);
+    }
+
+    .step-dot.done {
+      border-color: var(--success);
+      background: var(--success);
+      color: white;
+    }
+
+    .step-line {
+      flex: 1;
+      height: 2px;
+      background: var(--border);
+      transition: background 0.3s;
+    }
+
+    .step-line.done {
+      background: var(--success);
+    }
+
+    .otp-input-row {
+      display: flex;
+      gap: 0.5rem;
+      justify-content: center;
+      margin: 1.5rem 0;
+    }
+
+    .otp-digit {
+      width: 48px;
+      height: 56px;
+      text-align: center;
+      font-size: 1.5rem;
+      font-weight: 800;
+      font-family: var(--font-mono);
+      border: 2px solid var(--border);
+      border-radius: var(--radius-md);
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .otp-digit:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+
+    .otp-digit.filled {
+      border-color: var(--accent);
+      background: var(--accent-light);
+    }
+
+    .otp-digit.error-d {
+      border-color: var(--error);
+      background: rgba(192, 57, 43, 0.05);
+      animation: shake 0.3s ease;
+    }
+
+    @keyframes shake {
+
+      0%,
+      100% {
+        transform: translateX(0)
+      }
+
+      25% {
+        transform: translateX(-4px)
+      }
+
+      75% {
+        transform: translateX(4px)
+      }
+    }
+
+    .otp-countdown {
+      text-align: center;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-bottom: 1rem;
+    }
+
+    .otp-countdown .timer {
+      font-family: var(--font-mono);
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .otp-countdown.warn .timer {
+      color: var(--warning);
+    }
+
+    .otp-countdown.crit .timer {
+      color: var(--error);
+    }
+
+    .email-hint-box {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.875rem 1rem;
+      background: var(--accent-light);
+      border: 1px solid var(--glass-border);
+      border-radius: var(--radius-md);
+      margin-bottom: 1.25rem;
+      font-size: 0.875rem;
+    }
+
+    .success-anim {
+      text-align: center;
+      padding: 2rem;
+    }
+
+    .success-icon {
+      font-size: 3.5rem;
+      animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    @keyframes popIn {
+      0% {
+        transform: scale(0);
+        opacity: 0
+      }
+
+      100% {
+        transform: scale(1);
+        opacity: 1
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <nav class="navbar">
+    <a href="/index.html" class="logo-text">Lint<span>Vertex</span></a>
+    <div style="display:flex;align-items:center;gap:0.75rem">
+      <div class="theme-toggle"><span class="theme-label">☀️</span><button class="toggle-track">
+          <div class="toggle-thumb"></div>
+        </button></div>
+
+      <a href="/notifications.html" class="notif-bell" data-notif-count="0" title="Notifications">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+        </svg>
+        <span class="notif-badge" style="display:none">0</span>
+      </a>
+
+      <a href="#" data-logout class="btn btn-ghost btn-sm">Logout</a>
+    </div>
+  </nav>
+  <div class="layout">
+    <aside class="sidebar">
+      <ul class="sidebar-nav">
+        <li><a href="/dashboard.html"><svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="2">
+              <rect x="3" y="3" width="7" height="7" />
+              <rect x="14" y="3" width="7" height="7" />
+              <rect x="3" y="14" width="7" height="7" />
+              <rect x="14" y="14" width="7" height="7" />
+            </svg>Dashboard</a></li>
+        <li><a href="/analyze.html"><svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="2">
+              <polyline points="16 18 22 12 16 6" />
+              <polyline points="8 6 2 12 8 18" />
+            </svg>Code Analysis</a></li>
+        <li><a href="/history.html"><svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="2">
+              <circle cx="12" cy="12" r="10" />
+              <polyline points="12 6 12 12 16 14" />
+            </svg>History</a></li>
+        <li><a href="/rooms.html"><svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="2">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+            </svg>Rooms</a></li>
+        <li><a href="/profile.html" class="active"><svg class="sidebar-icon" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+              <circle cx="12" cy="7" r="4" />
+            </svg>Profile</a></li>
+        <li><a href="/feedback.html"><svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="2">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+            </svg>Feedback</a></li>
+        <li class="admin-only" style="display:none"><a href="/admin.html"><svg class="sidebar-icon" viewBox="0 0 24 24"
+              fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+            </svg>Admin</a></li>
+      </ul>
+    </aside>
+
+    <main class="main-content">
+      <div class="page-title">Profile Settings</div>
+      <p class="page-subtitle">Manage your account and security</p>
+
+      <div class="profile-grid">
+        <div class="card" style="text-align:center;padding:2rem">
+          <div class="profile-avatar" id="avatarDisplay" onclick="document.getElementById('avatarInput').click()">👤
+          </div>
+          <div style="font-size:1.1rem;font-weight:800" id="profileName">—</div>
+          <div style="font-size:0.8rem;color:var(--accent);font-weight:600;margin:0.25rem 0" id="profileRole">Developer
+          </div>
+          <div style="font-size:0.8rem;color:var(--text-muted)" id="profileEmail">—</div>
+          <div style="font-size:0.8rem;color:var(--text-muted);margin-top:0.25rem" id="profileAddress">—</div>
+          <div class="divider"></div>
+          <div style="font-size:0.72rem;color:var(--text-muted)">Click photo to change</div>
+          <input type="file" id="avatarInput" accept="image/jpeg,image/png" style="display:none" />
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:1.5rem">
+          <!-- Edit Info -->
+          <div class="card">
+            <h3 style="font-size:1rem;font-weight:700;margin-bottom:1rem">Edit Information</h3>
+            <div
+              style="font-size:0.8rem;padding:0.625rem 0.875rem;background:var(--accent-light);border-radius:var(--radius-sm);margin-bottom:1.25rem;color:var(--text-secondary)">
+              🔒 Current password required to save changes
+            </div>
+            <form id="profileForm" enctype="multipart/form-data">
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem">
+                <div class="form-group"><label class="form-label">Username</label><input type="text" class="form-input"
+                    id="editUsername" /></div>
+                <div class="form-group"><label class="form-label">Email</label><input type="email" class="form-input"
+                    id="editEmail" /></div>
+              </div>
+              <div class="form-group"><label class="form-label">Address</label><input type="text" class="form-input"
+                  id="editAddress" /></div>
+              <div class="divider"></div>
+              <div class="form-group"><label class="form-label">Current Password <span
+                    style="color:var(--error)">*</span></label><input type="password" class="form-input"
+                  id="currentPasswordInfo" placeholder="Required" /></div>
+              <button type="submit" class="btn btn-primary" id="saveInfoBtn">Save Changes</button>
+            </form>
+          </div>
+
+          <!-- Change Password — 3-Step OTP Flow -->
+          <div class="card">
+            <div class="section-toggle" onclick="togglePwd()">
+              <h3>🔑 Change Password</h3>
+              <span class="toggle-arrow" id="pwdArrow">▾</span>
+            </div>
+            <div id="passwordSection" style="display:none">
+
+              <div class="step-indicator">
+                <div class="step-dot active" id="sd1">1</div>
+                <div class="step-line" id="sl1"></div>
+                <div class="step-dot" id="sd2">2</div>
+                <div class="step-line" id="sl2"></div>
+                <div class="step-dot" id="sd3">3</div>
+              </div>
+              <div
+                style="display:flex;justify-content:space-between;font-size:0.7rem;color:var(--text-muted);margin-bottom:1.5rem">
+                <span>Verify Identity</span><span>Enter Code</span><span>New Password</span>
+              </div>
+
+              <!-- Step 1 -->
+              <div class="otp-step active" id="pwdStep1">
+                <p style="font-size:0.875rem;color:var(--text-secondary);margin-bottom:1rem">Enter your current
+                  password. We'll send a verification code to your email.</p>
+                <div class="form-group">
+                  <label class="form-label">Current Password</label>
+                  <input type="password" class="form-input" id="step1Pwd" placeholder="Your current password" />
+                  <span class="form-error" id="step1Err"></span>
+                </div>
+                <button class="btn btn-primary" onclick="sendOtp()">📧 Send Verification Code</button>
+              </div>
+
+              <!-- Step 2 -->
+              <div class="otp-step" id="pwdStep2">
+                <div class="email-hint-box">
+                  <span style="font-size:1.25rem">📧</span>
+                  <div><strong>Code sent!</strong><br /><span style="font-size:0.78rem;color:var(--text-muted)">Check
+                      <span id="emailHint"></span></span></div>
+                </div>
+                <p style="font-size:0.875rem;color:var(--text-secondary);margin-bottom:0.5rem">Enter the 6-digit
+                  verification code:</p>
+                <div class="otp-input-row" id="otpInputRow">
+                  <input class="otp-digit" id="d1" maxlength="1" inputmode="numeric" />
+                  <input class="otp-digit" id="d2" maxlength="1" inputmode="numeric" />
+                  <input class="otp-digit" id="d3" maxlength="1" inputmode="numeric" />
+                  <input class="otp-digit" id="d4" maxlength="1" inputmode="numeric" />
+                  <input class="otp-digit" id="d5" maxlength="1" inputmode="numeric" />
+                  <input class="otp-digit" id="d6" maxlength="1" inputmode="numeric" />
+                </div>
+                <div class="otp-countdown" id="otpCountdown">Expires in <span class="timer" id="cdTimer">10:00</span>
+                </div>
+                <span class="form-error" id="step2Err"
+                  style="display:block;text-align:center;margin-bottom:0.75rem"></span>
+                <div style="display:flex;gap:0.75rem">
+                  <button class="btn btn-primary" style="flex:1" onclick="verifyAndProceed()">Verify →</button>
+                  <button class="btn btn-ghost btn-sm" id="resendBtn" onclick="resendCode()" disabled>Resend</button>
+                </div>
+              </div>
+
+              <!-- Step 3 -->
+              <div class="otp-step" id="pwdStep3">
+                <p style="font-size:0.875rem;color:var(--success);font-weight:600;margin-bottom:1.25rem">✅ Identity
+                  verified — enter your new password</p>
+                <div class="form-group"><label class="form-label">New Password</label><input type="password"
+                    class="form-input" id="newPwd" placeholder="Min 8 chars, 1 uppercase, 1 number" /></div>
+                <div class="form-group"><label class="form-label">Confirm New Password</label><input type="password"
+                    class="form-input" id="confirmNewPwd" placeholder="Repeat new password" /></div>
+                <span class="form-error" id="step3Err" style="display:block;margin-bottom:0.75rem"></span>
+                <button class="btn btn-primary btn-full" onclick="doChangePassword()">🔐 Change Password</button>
+              </div>
+
+              <!-- Success -->
+              <div class="otp-step" id="pwdStepDone">
+                <div class="success-anim">
+                  <div class="success-icon">✅</div>
+                  <div style="font-size:1.1rem;font-weight:800;margin:1rem 0 0.5rem">Password Changed!</div>
+                  <p style="font-size:0.875rem;color:var(--text-secondary)">Please log in again with your new password.
+                  </p>
+                  <div style="margin-top:1.5rem;display:flex;gap:0.75rem;justify-content:center">
+                    <a href="/login.html" class="btn btn-primary">Log In Again →</a>
+                    <button class="btn btn-ghost" onclick="resetPwd()">Stay Here</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="js/app.js"></script>
+  <script>
+    Auth.requireAuth();
+    const user = Auth.getUser();
+    let otpExpiry = 0, cdInterval = null, savedCode = "";
+
+    function fillForm(u) {
+      document.getElementById("editUsername").value = u.username || "";
+      document.getElementById("editEmail").value = u.email || "";
+      document.getElementById("editAddress").value = u.address || "";
+      document.getElementById("profileName").textContent = u.username;
+      document.getElementById("profileRole").textContent = u.role === "admin" ? "Admin" : "Developer";
+      document.getElementById("profileEmail").textContent = u.email;
+      document.getElementById("profileAddress").textContent = u.address || "No address";
+      const av = document.getElementById("avatarDisplay");
+      if (u.profile_image) av.innerHTML = `<img src="${u.profile_image}" />`;
+      else av.textContent = (u.username || "?")[0].toUpperCase();
+    }
+    fillForm(user);
+
+    document.getElementById("avatarInput").addEventListener("change", e => {
+      const f = e.target.files[0]; if (!f) return;
+      const r = new FileReader();
+      r.onload = ev => document.getElementById("avatarDisplay").innerHTML = `<img src="${ev.target.result}" />`;
+      r.readAsDataURL(f);
+    });
+
+    document.getElementById("profileForm").addEventListener("submit", async e => {
+      e.preventDefault();
+      const pwd = document.getElementById("currentPasswordInfo").value;
+      if (!pwd) { Toast.warning("Current password required"); return; }
+      const btn = document.getElementById("saveInfoBtn");
+      btn.disabled = true; btn.innerHTML = '<div class="spinner"></div>';
+      const fd = new FormData();
+      fd.append("username", document.getElementById("editUsername").value.trim());
+      fd.append("email", document.getElementById("editEmail").value.trim());
+      fd.append("address", document.getElementById("editAddress").value.trim());
+      fd.append("current_password", pwd);
+      const av = document.getElementById("avatarInput").files[0];
+      if (av) fd.append("profile_image", av);
+      const { ok, data } = await API.putForm("/api/profile/update", fd);
+      btn.disabled = false; btn.innerHTML = "Save Changes";
+      if (ok) {
+        Toast.success("Profile updated!");
+        const fresh = await API.get("/api/auth/me");
+        if (fresh.ok) { Auth.setSession(Auth.getToken(), fresh.data); fillForm(fresh.data); }
+        document.getElementById("currentPasswordInfo").value = "";
+      } else Toast.error(data.error || "Update failed");
+    });
+
+    // ── OTP Section ────────────────────────────────────────────
+    function togglePwd() {
+      const s = document.getElementById("passwordSection");
+      const a = document.getElementById("pwdArrow");
+      const open = s.style.display === "block";
+      s.style.display = open ? "none" : "block";
+      a.classList.toggle("open", !open);
+    }
+
+    function goStep(name) {
+      document.querySelectorAll(".otp-step").forEach(s => s.classList.remove("active"));
+      document.getElementById(`pwdStep${name}`).classList.add("active");
+      const num = parseInt(name) || 0;
+      [1, 2, 3].forEach(d => {
+        const dot = document.getElementById(`sd${d}`);
+        const line = document.getElementById(`sl${d}`);
+        if (d < num) { dot.className = "step-dot done"; dot.textContent = "✓"; if (line) line.className = "step-line done"; }
+        else if (d === num) { dot.className = "step-dot active"; dot.textContent = d; if (line) line.className = "step-line"; }
+        else { dot.className = "step-dot"; dot.textContent = d; if (line) line.className = "step-line"; }
+      });
+    }
+
+    async function sendOtp() {
+      const pwd = document.getElementById("step1Pwd").value;
+      const err = document.getElementById("step1Err");
+      err.textContent = "";
+      if (!pwd) { err.textContent = "Enter your current password"; return; }
+      const { ok, data } = await API.post("/api/email/otp/request", { current_password: pwd });
+      if (ok) {
+        document.getElementById("emailHint").textContent = data.email_hint;
+        otpExpiry = Date.now() + data.expires_in_seconds * 1000;
+        startCd(); goStep(2);
+        document.getElementById("d1").focus();
+        Toast.success("Verification code sent to your email!");
+      } else err.textContent = data.error || "Failed to send";
+    }
+
+    // Digit inputs
+    const DIDS = ["d1", "d2", "d3", "d4", "d5", "d6"];
+    DIDS.forEach((id, i) => {
+      const el = document.getElementById(id);
+      el.addEventListener("input", () => {
+        el.value = el.value.replace(/\D/g, "").slice(-1);
+        el.classList.toggle("filled", !!el.value);
+        el.classList.remove("error-d");
+        if (el.value && i < 5) document.getElementById(DIDS[i + 1]).focus();
+      });
+      el.addEventListener("keydown", e => {
+        if (e.key === "Backspace" && !el.value && i > 0) document.getElementById(DIDS[i - 1]).focus();
+        if (e.key === "Enter") verifyAndProceed();
+      });
+      el.addEventListener("paste", e => {
+        const p = (e.clipboardData || window.clipboardData).getData("text").replace(/\D/g, "");
+        if (p.length === 6) { DIDS.forEach((d, di) => { const el2 = document.getElementById(d); el2.value = p[di] || ""; el2.classList.toggle("filled", !!el2.value); }); document.getElementById(DIDS[5]).focus(); e.preventDefault(); }
+      });
+    });
+
+    function getCode() { return DIDS.map(id => document.getElementById(id).value).join(""); }
+    function clearDigits(err = false) {
+      DIDS.forEach(id => { const el = document.getElementById(id); el.value = ""; el.classList.remove("filled"); if (err) el.classList.add("error-d"); });
+      setTimeout(() => DIDS.forEach(id => document.getElementById(id).classList.remove("error-d")), 600);
+      document.getElementById("d1").focus();
+    }
+
+    function startCd() {
+      if (cdInterval) clearInterval(cdInterval);
+      const cd = document.getElementById("otpCountdown"), tm = document.getElementById("cdTimer");
+      document.getElementById("resendBtn").disabled = true;
+      cdInterval = setInterval(() => {
+        const rem = Math.max(0, Math.ceil((otpExpiry - Date.now()) / 1000));
+        const m = String(Math.floor(rem / 60)).padStart(2, "0"), s = String(rem % 60).padStart(2, "0");
+        tm.textContent = `${m}:${s}`;
+        cd.className = `otp-countdown${rem < 60 ? rem < 20 ? " crit" : " warn" : ""}`;
+        if (rem <= 0) { clearInterval(cdInterval); tm.textContent = "Expired"; document.getElementById("resendBtn").disabled = false; }
+        if (rem <= 540) document.getElementById("resendBtn").disabled = false;
+      }, 1000);
+    }
+
+    async function verifyAndProceed() {
+      const code = getCode();
+      const err = document.getElementById("step2Err");
+      err.textContent = "";
+      if (code.length !== 6) { err.textContent = "Enter all 6 digits"; return; }
+      // Store code, advance to step 3 (actual verify happens on submit)
+      savedCode = code;
+      goStep(3);
+      document.getElementById("newPwd").focus();
+    }
+
+    async function resendCode() {
+      const pwd = document.getElementById("step1Pwd").value;
+      if (!pwd) { goStep(1); return; }
+      const { ok, data } = await API.post("/api/email/otp/request", { current_password: pwd });
+      if (ok) {
+        otpExpiry = Date.now() + data.expires_in_seconds * 1000;
+        startCd(); clearDigits();
+        document.getElementById("resendBtn").disabled = true;
+        Toast.success("New code sent!");
+      } else Toast.error(data.error || "Could not resend");
+    }
+
+    async function doChangePassword() {
+      const np = document.getElementById("newPwd").value;
+      const cp = document.getElementById("confirmNewPwd").value;
+      const err = document.getElementById("step3Err");
+      err.textContent = "";
+      if (!np || !cp) { err.textContent = "Both fields required"; return; }
+      if (np !== cp) { err.textContent = "Passwords do not match"; return; }
+
+      const { ok, data } = await API.post("/api/email/otp/verify", {
+        otp_code: savedCode, new_password: np, confirm_new_password: cp,
+      });
+      if (ok) {
+        clearInterval(cdInterval);
+        [1, 2, 3].forEach(d => { const dot = document.getElementById(`sd${d}`); dot.className = "step-dot done"; dot.textContent = "✓"; });
+        goStep("Done");
+      } else {
+        err.textContent = data.error || "Failed";
+        if ((data.error || "").toLowerCase().includes("code")) { goStep(2); clearDigits(true); }
+      }
+    }
+
+    function resetPwd() {
+      clearInterval(cdInterval); savedCode = "";
+      ["step1Pwd", "newPwd", "confirmNewPwd"].forEach(id => document.getElementById(id).value = "");
+      clearDigits(); goStep(1);
+    }
+  </script>
+</body>
+
+</html>

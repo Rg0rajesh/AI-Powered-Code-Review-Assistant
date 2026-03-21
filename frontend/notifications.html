@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Notifications – LintVertex</title>
+  <link rel="stylesheet" href="css/main.css"/>
+  <style>
+    .notif-layout {
+      display: grid;
+      grid-template-columns: 240px 1fr;
+      gap: 1.5rem;
+    }
+    @media(max-width:800px){ .notif-layout{grid-template-columns:1fr;} }
+
+    /* Category sidebar */
+    .cat-list { list-style:none; display:flex; flex-direction:column; gap:0.25rem; }
+    .cat-item {
+      display:flex;align-items:center;gap:0.625rem;
+      padding:0.5rem 0.875rem;border-radius:var(--radius-sm);
+      font-size:0.82rem;font-weight:500;color:var(--text-secondary);
+      cursor:pointer;transition:all 0.15s;user-select:none;
+    }
+    .cat-item:hover { background:var(--accent-light);color:var(--text-primary); }
+    .cat-item.active { background:var(--accent-light);color:var(--accent);font-weight:700; border-left:3px solid var(--accent);padding-left:calc(0.875rem - 3px); }
+    .cat-count { margin-left:auto;font-size:0.65rem;font-weight:700;padding:0.15rem 0.5rem;background:var(--accent);color:var(--bg-primary);border-radius:100px; }
+
+    /* Notification card */
+    .notif-card {
+      display:flex;gap:1rem;padding:1.1rem 1.25rem;
+      border-bottom:1px solid var(--border);
+      cursor:pointer;transition:background 0.15s;
+      position:relative;
+    }
+    .notif-card:last-child { border-bottom:none; }
+    .notif-card:hover { background:var(--accent-light); }
+    .notif-card.unread { background:var(--accent-light); }
+    .notif-card.unread::before {
+      content:"";position:absolute;left:0;top:0;bottom:0;
+      width:3px;background:var(--accent);border-radius:0 2px 2px 0;
+    }
+
+    .notif-icon {
+      width:44px;height:44px;border-radius:var(--radius-md);
+      background:var(--bg-secondary);border:1px solid var(--border);
+      display:flex;align-items:center;justify-content:center;
+      font-size:1.25rem;flex-shrink:0;
+    }
+
+    .notif-title { font-size:0.9rem;font-weight:700;margin-bottom:0.25rem; }
+    .notif-msg   { font-size:0.82rem;color:var(--text-secondary);line-height:1.5;margin-bottom:0.375rem; }
+    .notif-meta  { display:flex;align-items:center;gap:0.5rem;font-size:0.72rem;color:var(--text-muted); }
+
+    .type-label {
+      padding:0.15rem 0.6rem;border-radius:100px;font-size:0.65rem;font-weight:700;
+      background:var(--accent-light);color:var(--accent);
+    }
+
+    .action-link {
+      font-size:0.75rem;font-weight:700;color:var(--accent);
+      background:none;border:none;cursor:pointer;font-family:var(--font-ui);
+      padding:0;text-decoration:underline;
+    }
+
+    .unread-dot {
+      width:8px;height:8px;border-radius:50%;background:var(--accent);
+      margin-left:auto;flex-shrink:0;animation:pulse 2s infinite;
+    }
+
+    /* Top bar with bulk actions */
+    .notif-topbar {
+      display:flex;align-items:center;justify-content:space-between;
+      padding:0.875rem 1.25rem;
+      background:var(--bg-secondary);
+      border-bottom:1px solid var(--border);
+      gap:0.75rem;flex-wrap:wrap;
+    }
+    .notif-count { font-size:0.8rem;color:var(--text-muted); }
+    .notif-count strong { color:var(--text-primary); }
+
+    /* Preference toggle */
+    .pref-row {
+      display:flex;align-items:center;justify-content:space-between;
+      padding:0.75rem 0;border-bottom:1px solid var(--border);font-size:0.875rem;
+    }
+    .pref-row:last-child { border-bottom:none; }
+    .pref-label { font-weight:600; }
+    .pref-sub   { font-size:0.75rem;color:var(--text-muted); }
+    .pref-toggle {
+      width:36px;height:20px;border-radius:10px;background:var(--border);
+      border:none;cursor:pointer;position:relative;transition:background 0.2s;flex-shrink:0;
+    }
+    .pref-toggle.on { background:var(--accent); }
+    .pref-toggle::after {
+      content:"";position:absolute;width:14px;height:14px;border-radius:50%;
+      background:white;top:3px;left:3px;transition:transform 0.2s;
+    }
+    .pref-toggle.on::after { transform:translateX(16px); }
+  </style>
+</head>
+<body>
+  <nav class="navbar">
+    <a href="/index.html" class="logo-text">Lint<span>Vertex</span></a>
+    <ul class="nav-links">
+      <li><a href="/dashboard.html">Dashboard</a></li>
+    </ul>
+    <div style="display:flex;align-items:center;gap:0.75rem">
+      <div class="theme-toggle"><span class="theme-label">☀️</span><button class="toggle-track"><div class="toggle-thumb"></div></button></div>
+      <a href="#" data-logout class="btn btn-ghost btn-sm">Logout</a>
+    </div>
+  </nav>
+
+  <div class="layout">
+    <aside class="sidebar">
+      <ul class="sidebar-nav">
+        <li><a href="/dashboard.html"><svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>Dashboard</a></li>
+        <li><a href="/analyze.html"><svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>Code Analysis</a></li>
+        <li><a href="/profile.html"><svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>Profile</a></li>
+        <li><a href="/notifications.html" class="active"><svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>Notifications</a></li>
+        <li class="admin-only" style="display:none"><a href="/admin-notifications.html"><svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>Admin Notifications</a></li>
+      </ul>
+    </aside>
+
+    <main class="main-content">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem">
+        <div>
+          <div class="page-title">Notifications</div>
+          <div class="page-subtitle" style="margin-bottom:0">Stay updated on platform changes, replies, and announcements</div>
+        </div>
+        <button class="btn btn-ghost btn-sm" onclick="markAllRead()">✓ Mark All Read</button>
+      </div>
+
+      <div class="notif-layout">
+        <!-- Category sidebar -->
+        <div>
+          <div class="card" style="padding:0.75rem">
+            <div style="font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-muted);margin-bottom:0.625rem;padding:0 0.25rem">Categories</div>
+            <ul class="cat-list" id="categoryList">
+              <li class="cat-item active" data-filter="all" onclick="setFilter('all',this)">
+                🔔 All Notifications <span class="cat-count" id="countAll">0</span>
+              </li>
+              <li class="cat-item" data-filter="unread" onclick="setFilter('unread',this)">
+                🔵 Unread <span class="cat-count" id="countUnread" style="background:var(--error)">0</span>
+              </li>
+              <div class="divider" style="margin:0.5rem 0"></div>
+              <li class="cat-item" data-filter="feature" onclick="setFilter('feature',this)">
+                🚀 New Features
+              </li>
+              <li class="cat-item" data-filter="announcement" onclick="setFilter('announcement',this)">
+                📢 Announcements
+              </li>
+              <li class="cat-item" data-filter="terms" onclick="setFilter('terms',this)">
+                📋 Terms Updates
+              </li>
+              <li class="cat-item" data-filter="feedback_reply" onclick="setFilter('feedback_reply',this)">
+                💬 Feedback Replies
+              </li>
+              <li class="cat-item" data-filter="security" onclick="setFilter('security',this)">
+                🛡️ Security
+              </li>
+              <li class="cat-item" data-filter="maintenance" onclick="setFilter('maintenance',this)">
+                🔧 Maintenance
+              </li>
+              <li class="cat-item" data-filter="update" onclick="setFilter('update',this)">
+                🔄 Updates
+              </li>
+            </ul>
+          </div>
+
+          <!-- Preferences -->
+          <div class="card" style="margin-top:1rem">
+            <div style="font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-muted);margin-bottom:0.875rem">Preferences</div>
+            <div class="pref-row">
+              <div>
+                <div class="pref-label">Browser alerts</div>
+                <div class="pref-sub">Pop-up for new notifications</div>
+              </div>
+              <button class="pref-toggle on" id="prefBrowser" onclick="togglePref('browser',this)"></button>
+            </div>
+            <div class="pref-row">
+              <div>
+                <div class="pref-label">Feature updates</div>
+                <div class="pref-sub">New platform features</div>
+              </div>
+              <button class="pref-toggle on" id="prefFeature" onclick="togglePref('feature',this)"></button>
+            </div>
+            <div class="pref-row">
+              <div>
+                <div class="pref-label">Policy notices</div>
+                <div class="pref-sub">Terms & security alerts</div>
+              </div>
+              <button class="pref-toggle on" id="prefPolicy" onclick="togglePref('policy',this)"></button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Notifications list -->
+        <div>
+          <div class="card" style="padding:0;overflow:hidden">
+            <!-- Top bar -->
+            <div class="notif-topbar">
+              <div class="notif-count">
+                Showing <strong id="shownCount">0</strong> notifications
+                · <strong id="unreadCount" style="color:var(--accent)">0</strong> unread
+              </div>
+              <div style="display:flex;gap:0.5rem">
+                <button class="btn btn-ghost btn-sm" onclick="loadNotifications()">🔄 Refresh</button>
+                <button class="btn btn-ghost btn-sm" onclick="markAllRead()">✓ Mark All Read</button>
+              </div>
+            </div>
+
+            <!-- List -->
+            <div id="notifList">
+              <div style="padding:2rem;text-align:center"><div class="spinner"></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="js/app.js"></script>
+  <script>
+    Auth.requireAuth();
+
+    let allNotifications = [];
+    let currentFilter    = "all";
+
+    const TYPE_META = {
+      update:         { icon:"🔄", label:"Update",         color:"var(--info)" },
+      feedback_reply: { icon:"💬", label:"Feedback Reply",  color:"var(--success)" },
+      terms:          { icon:"📋", label:"Terms Update",    color:"var(--warning)" },
+      announcement:   { icon:"📢", label:"Announcement",    color:"var(--accent)" },
+      feature:        { icon:"🚀", label:"New Feature",     color:"var(--accent)" },
+      security:       { icon:"🛡️", label:"Security",       color:"var(--error)" },
+      maintenance:    { icon:"🔧", label:"Maintenance",     color:"var(--warning)" },
+      system:         { icon:"⚙️", label:"System",          color:"var(--text-muted)" },
+    };
+
+    async function loadNotifications() {
+      const { ok, data } = await API.get("/api/notifications?limit=100");
+      if (!ok) return;
+      allNotifications = data.notifications || [];
+      updateCounts();
+      renderList();
+    }
+
+    function updateCounts() {
+      const unread = allNotifications.filter(n => !n.is_read).length;
+      document.getElementById("countAll").textContent    = allNotifications.length;
+      document.getElementById("countUnread").textContent = unread;
+      document.getElementById("unreadCount").textContent = unread;
+    }
+
+    function setFilter(filter, el) {
+      currentFilter = filter;
+      document.querySelectorAll(".cat-item").forEach(c => c.classList.remove("active"));
+      el.classList.add("active");
+      renderList();
+    }
+
+    function renderList() {
+      let items = allNotifications;
+      if (currentFilter === "unread") items = items.filter(n => !n.is_read);
+      else if (currentFilter !== "all") items = items.filter(n => n.type === currentFilter);
+
+      document.getElementById("shownCount").textContent = items.length;
+
+      if (!items.length) {
+        document.getElementById("notifList").innerHTML = `
+          <div style="text-align:center;padding:4rem;color:var(--text-muted)">
+            <div style="font-size:3rem;margin-bottom:1rem;opacity:0.35">🔔</div>
+            <div style="font-weight:700;font-size:1rem;margin-bottom:0.5rem">
+              ${currentFilter === "unread" ? "All caught up! ✓" : "No notifications here"}
+            </div>
+            <div style="font-size:0.82rem">
+              ${currentFilter === "unread" ? "You have no unread notifications." : "Nothing in this category yet."}
+            </div>
+          </div>`;
+        return;
+      }
+
+      document.getElementById("notifList").innerHTML = items.map(n => {
+        const meta   = TYPE_META[n.type] || TYPE_META.system;
+        const unread = !n.is_read;
+        return `
+          <div class="notif-card${unread?" unread":""}" onclick="clickNotif('${n.id}','${n.action_url||""}')">
+            <div class="notif-icon">${n.icon || meta.icon}</div>
+            <div style="flex:1;min-width:0">
+              <div class="notif-title">${escapeHtml(n.title)}</div>
+              <div class="notif-msg">${escapeHtml(n.message)}</div>
+              <div class="notif-meta">
+                <span class="type-label">${meta.label}</span>
+                <span>${formatRelative(n.created_at)}</span>
+                ${n.action_label ? `<button class="action-link">${escapeHtml(n.action_label)} →</button>` : ""}
+                ${unread ? '<div class="unread-dot"></div>' : ""}
+              </div>
+            </div>
+          </div>`;
+      }).join("");
+    }
+
+    async function clickNotif(id, url) {
+      await API.post(`/api/notifications/read/${id}`, {});
+      const n = allNotifications.find(x => x.id === id);
+      if (n) n.is_read = true;
+      updateCounts();
+      renderList();
+      if (url && url !== "#") window.location.href = url;
+    }
+
+    async function markAllRead() {
+      await API.post("/api/notifications/read-all", {});
+      allNotifications.forEach(n => n.is_read = true);
+      updateCounts();
+      renderList();
+      Toast.success("All marked as read!");
+    }
+
+    function togglePref(key, btn) {
+      btn.classList.toggle("on");
+      const prefs = JSON.parse(localStorage.getItem("lv_notif_prefs") || "{}");
+      prefs[key] = btn.classList.contains("on");
+      localStorage.setItem("lv_notif_prefs", JSON.stringify(prefs));
+    }
+
+    // Load saved prefs
+    const savedPrefs = JSON.parse(localStorage.getItem("lv_notif_prefs") || "{}");
+    Object.entries(savedPrefs).forEach(([k, v]) => {
+      const btn = document.getElementById(`pref${k.charAt(0).toUpperCase()+k.slice(1)}`);
+      if (btn && !v) btn.classList.remove("on");
+    });
+
+    loadNotifications();
+  </script>
+</body>
+</html>

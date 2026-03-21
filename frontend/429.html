@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>429 – Too Many Requests · LintVertex</title>
+  <link rel="stylesheet" href="css/main.css"/>
+  <style>
+    body {
+      min-height:100vh;display:flex;flex-direction:column;
+      align-items:center;justify-content:center;
+      padding:2rem;overflow:hidden;
+    }
+
+    .error-wrap { position:relative;z-index:1;text-align:center;max-width:580px; }
+
+    /* Speed lines background */
+    .speed-line {
+      position:fixed;
+      height:2px;
+      background:linear-gradient(to right, transparent, var(--accent), transparent);
+      opacity:0.08;
+      animation:speedLine linear infinite;
+      top:var(--top);
+      left:-100%;
+      width:100%;
+    }
+    @keyframes speedLine {
+      from { transform:translateX(-100%); }
+      to   { transform:translateX(300%); }
+    }
+
+    /* Scene */
+    .scene { width:360px;height:220px;margin:0 auto 2rem;position:relative; }
+
+    /* Road */
+    .road {
+      position:absolute;bottom:0;left:0;right:0;height:50px;
+      background:var(--bg-secondary);
+      border:1px solid var(--border);border-radius:var(--radius-md);
+      overflow:hidden;
+    }
+    .road-dashes {
+      position:absolute;top:50%;transform:translateY(-50%);
+      display:flex;gap:12px;
+      animation:roadScroll 0.4s linear infinite;
+    }
+    .road-dash {
+      width:30px;height:3px;
+      background:var(--border);border-radius:2px;flex-shrink:0;
+    }
+
+    @keyframes roadScroll {
+      from { transform:translateY(-50%) translateX(0); }
+      to   { transform:translateY(-50%) translateX(-42px); }
+    }
+
+    /* Car */
+    .car {
+      position:absolute;bottom:42px;left:50%;
+      transform:translateX(-50%);
+      animation:carShake 0.1s ease-in-out infinite;
+    }
+    @keyframes carShake {
+      0%,100% { transform:translateX(-50%) translateY(0); }
+      50%      { transform:translateX(-50%) translateY(-2px); }
+    }
+
+    /* Steam from engine */
+    .steam {
+      position:absolute;
+      width:8px;height:8px;
+      border-radius:50%;
+      background:var(--text-muted);
+      opacity:0;
+      animation:steamUp ease-out infinite;
+    }
+    @keyframes steamUp {
+      0%   { transform:translateY(0) scale(0.5); opacity:0.7; }
+      100% { transform:translateY(-40px) scale(2.5); opacity:0; }
+    }
+
+    /* Speed blur lines on car */
+    .motion-blur {
+      position:absolute;
+      height:3px;
+      background:linear-gradient(to left, var(--accent), transparent);
+      border-radius:1px;
+      animation:blurFlash ease-out infinite;
+      opacity:0.5;
+      left:-80px;
+    }
+    @keyframes blurFlash {
+      0%,100% { opacity:0.5;width:80px; }
+      50%      { opacity:0.1;width:40px; }
+    }
+
+    /* Speedometer */
+    .speedometer {
+      position:absolute;right:20px;top:20px;
+      width:70px;height:70px;
+      background:var(--bg-card);
+      border:2px solid var(--border);
+      border-radius:50%;
+      display:flex;align-items:center;justify-content:center;
+      flex-direction:column;
+      box-shadow:var(--shadow-sm);
+    }
+    .speed-num {
+      font-family:var(--font-mono);font-weight:800;font-size:1.1rem;
+      color:var(--error,#c0392b);
+      animation:speedBlip 0.3s ease-in-out infinite;
+    }
+    @keyframes speedBlip {
+      0%,100% { color:var(--error,#c0392b); }
+      50%      { color:var(--warning,#e67e22); }
+    }
+    .speed-label { font-size:0.55rem;color:var(--text-muted);font-weight:700;text-transform:uppercase;letter-spacing:0.05em; }
+
+    /* Countdown ring */
+    .countdown-ring {
+      width: 120px;
+      height: 120px;
+      margin: 0 auto 1.5rem;
+      position: relative;
+    }
+    .countdown-ring svg { transform: rotate(-90deg); }
+    .ring-value {
+      position:absolute;
+      inset:0;
+      display:flex;align-items:center;justify-content:center;
+      font-family:var(--font-mono);
+      font-size:1.75rem;font-weight:800;
+      color:var(--text-primary);
+    }
+
+    /* Error text */
+    .error-code  { font-size:0.78rem;font-weight:700;text-transform:uppercase;letter-spacing:0.14em;color:var(--warning,#e67e22);margin-bottom:0.75rem; }
+    .error-title { font-size:clamp(1.5rem,4vw,2rem);font-weight:800;letter-spacing:-0.03em;margin-bottom:0.75rem; }
+    .error-body  { color:var(--text-secondary);font-size:0.95rem;line-height:1.65;margin-bottom:1.5rem;max-width:420px;margin-left:auto;margin-right:auto; }
+    .error-actions { display:flex;gap:0.75rem;justify-content:center;flex-wrap:wrap;margin-top:1.5rem; }
+
+    .orb { position:fixed;border-radius:50%;background:var(--warning,#e67e22);opacity:0.04;pointer-events:none; }
+  </style>
+</head>
+<body>
+
+  <!-- Speed lines -->
+  <div class="speed-line" style="--top:15%;animation-duration:0.8s;animation-delay:0s"></div>
+  <div class="speed-line" style="--top:30%;animation-duration:0.6s;animation-delay:0.2s"></div>
+  <div class="speed-line" style="--top:55%;animation-duration:0.9s;animation-delay:0.4s"></div>
+  <div class="speed-line" style="--top:70%;animation-duration:0.7s;animation-delay:0.1s"></div>
+  <div class="speed-line" style="--top:85%;animation-duration:0.8s;animation-delay:0.6s"></div>
+
+  <div class="orb" style="width:300px;height:300px;top:-80px;right:-60px"></div>
+
+  <nav class="navbar">
+    <a href="/index.html" class="logo-text">Lint<span>Vertex</span></a>
+    <div class="theme-toggle"><span class="theme-label">☀️</span><button class="toggle-track"><div class="toggle-thumb"></div></button></div>
+  </nav>
+
+  <div class="error-wrap">
+
+    <div class="scene">
+      <!-- Speedometer -->
+      <div class="speedometer">
+        <div class="speed-num" id="speedNum">999</div>
+        <div class="speed-label">req/s</div>
+      </div>
+
+      <!-- Motion blur -->
+      <div class="motion-blur" style="top:55px;animation-duration:0.4s;animation-delay:0s"></div>
+      <div class="motion-blur" style="top:62px;animation-duration:0.5s;animation-delay:0.1s;height:2px;opacity:0.3"></div>
+      <div class="motion-blur" style="top:70px;animation-duration:0.35s;animation-delay:0.05s;height:4px"></div>
+
+      <!-- Steam from hood -->
+      <div class="steam" style="left:178px;top:55px;animation-duration:1.2s;animation-delay:0s"></div>
+      <div class="steam" style="left:190px;top:58px;animation-duration:1s;animation-delay:0.4s;width:6px;height:6px"></div>
+      <div class="steam" style="left:168px;top:60px;animation-duration:1.4s;animation-delay:0.8s"></div>
+
+      <!-- Car SVG -->
+      <div class="car">
+        <svg width="160" height="90" viewBox="0 0 160 90" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <!-- Car shadow -->
+          <ellipse cx="80" cy="88" rx="60" ry="4" fill="var(--border)" opacity="0.4"/>
+          <!-- Car body -->
+          <rect x="10" y="40" width="140" height="40" rx="8" fill="var(--bg-card)" stroke="var(--border)" stroke-width="2"/>
+          <!-- Car roof -->
+          <path d="M30 40 L40 16 L120 16 L130 40 Z" fill="var(--bg-card)" stroke="var(--border)" stroke-width="2"/>
+          <!-- Windshield -->
+          <path d="M44 40 L52 20 L110 20 L118 40 Z" fill="var(--bg-secondary)" stroke="var(--border)" stroke-width="1.5" opacity="0.8"/>
+          <!-- Rear window -->
+          <path d="M32 38 L40 20 L52 20 L44 38 Z" fill="var(--bg-secondary)" stroke="var(--border)" stroke-width="1.5" opacity="0.6"/>
+          <!-- Door lines -->
+          <line x1="70" y1="40" x2="70" y2="78" stroke="var(--border)" stroke-width="1.5"/>
+          <!-- Door handle -->
+          <rect x="74" y="56" width="12" height="3" rx="1.5" fill="var(--border)"/>
+          <!-- Headlights -->
+          <rect x="130" y="48" width="16" height="10" rx="4" fill="var(--accent)" opacity="0.7">
+            <animate attributeName="opacity" values="0.7;1;0.7" dur="0.2s" repeatCount="indefinite"/>
+          </rect>
+          <!-- Rear lights -->
+          <rect x="12" y="50" width="10" height="8" rx="3" fill="var(--error,#c0392b)" opacity="0.8">
+            <animate attributeName="opacity" values="0.8;0.3;0.8" dur="0.3s" repeatCount="indefinite"/>
+          </rect>
+          <!-- Exhaust smoke particles -->
+          <circle cx="8" cy="62" r="5" fill="var(--text-muted)" opacity="0.3">
+            <animate attributeName="cx" values="8;-20" dur="0.5s" repeatCount="indefinite"/>
+            <animate attributeName="opacity" values="0.3;0" dur="0.5s" repeatCount="indefinite"/>
+            <animate attributeName="r" values="5;10" dur="0.5s" repeatCount="indefinite"/>
+          </circle>
+          <!-- Wheels -->
+          <circle cx="38" cy="78" r="14" fill="var(--bg-secondary)" stroke="var(--border)" stroke-width="2.5">
+            <animateTransform attributeName="transform" type="rotate" values="0,38,78;360,38,78" dur="0.2s" repeatCount="indefinite"/>
+          </circle>
+          <circle cx="38" cy="78" r="6" fill="var(--bg-card)" stroke="var(--border)" stroke-width="2">
+            <animateTransform attributeName="transform" type="rotate" values="0,38,78;360,38,78" dur="0.2s" repeatCount="indefinite"/>
+          </circle>
+          <circle cx="122" cy="78" r="14" fill="var(--bg-secondary)" stroke="var(--border)" stroke-width="2.5">
+            <animateTransform attributeName="transform" type="rotate" values="0,122,78;360,122,78" dur="0.2s" repeatCount="indefinite"/>
+          </circle>
+          <circle cx="122" cy="78" r="6" fill="var(--bg-card)" stroke="var(--border)" stroke-width="2">
+            <animateTransform attributeName="transform" type="rotate" values="0,122,78;360,122,78" dur="0.2s" repeatCount="indefinite"/>
+          </circle>
+          <!-- Sweat drop on roof (overheating) -->
+          <ellipse cx="80" cy="10" rx="4" ry="6" fill="var(--info,#2980b9)" opacity="0.5">
+            <animate attributeName="cy" values="10;14;10" dur="1s" repeatCount="indefinite"/>
+            <animate attributeName="opacity" values="0.5;0;0.5" dur="1s" repeatCount="indefinite"/>
+          </ellipse>
+        </svg>
+      </div>
+
+      <!-- Road -->
+      <div class="road">
+        <div class="road-dashes">
+          <div class="road-dash"></div><div class="road-dash"></div>
+          <div class="road-dash"></div><div class="road-dash"></div>
+          <div class="road-dash"></div><div class="road-dash"></div>
+          <div class="road-dash"></div><div class="road-dash"></div>
+          <div class="road-dash"></div><div class="road-dash"></div>
+        </div>
+      </div>
+    </div>
+
+    <p class="error-code">Error 429 — Too Many Requests</p>
+    <h1 class="error-title">Whoa, slow down! 🏎️</h1>
+    <p class="error-body">
+      You're sending requests faster than our servers can handle.
+      Take a quick breather — we'll be ready for you again shortly.
+    </p>
+
+    <!-- Countdown ring -->
+    <div class="countdown-ring">
+      <svg width="120" height="120" viewBox="0 0 120 120">
+        <circle cx="60" cy="60" r="52" fill="none" stroke="var(--border)" stroke-width="6"/>
+        <circle cx="60" cy="60" r="52" fill="none" stroke="var(--accent)" stroke-width="6"
+          stroke-dasharray="327" stroke-dashoffset="327" stroke-linecap="round"
+          id="countdownArc"/>
+      </svg>
+      <div class="ring-value"><span id="ringNum">60</span>s</div>
+    </div>
+
+    <div class="error-actions">
+      <button class="btn btn-primary btn-lg" id="retryBtn" disabled>⏳ Please wait...</button>
+      <a href="/dashboard.html" class="btn btn-ghost btn-lg">🏠 Dashboard</a>
+    </div>
+  </div>
+
+  <script src="js/app.js"></script>
+  <script>
+    // Speedo random flicker
+    const speedEl = document.getElementById("speedNum");
+    setInterval(() => { speedEl.textContent = Math.floor(Math.random()*400+600); }, 200);
+
+    // Countdown
+    let secs = 60;
+    const arc  = document.getElementById("countdownArc");
+    const num  = document.getElementById("ringNum");
+    const btn  = document.getElementById("retryBtn");
+    const circ = 327;
+
+    const timer = setInterval(() => {
+      secs--;
+      num.textContent = secs;
+      arc.style.strokeDashoffset = circ - (((60 - secs) / 60) * circ);
+      if (secs <= 0) {
+        clearInterval(timer);
+        btn.disabled = false;
+        btn.innerHTML = "🔄 Try Again Now";
+        btn.onclick = () => window.location.reload();
+      }
+    }, 1000);
+  </script>
+</body>
+</html>
