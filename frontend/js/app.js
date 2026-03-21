@@ -7,7 +7,7 @@
 // If deploying frontend on Vercel AND backend on Render:
 // Change the URL below to your Render URL (e.g. https://lintvertex-api.onrender.com)
 const API_BASE = window.location.origin.includes("vercel.app") 
-  ? "https://your-render-backend-url-here.onrender.com" 
+  ? "https://lintvertex-backend.onrender.com" 
   : window.location.origin;
 
 // ── Storage Keys ──────────────────────────────────────────────
