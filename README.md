@@ -173,3 +173,4 @@ lintvertex/
 ## 📜 License
 
 MIT License — built for LintVertex SaaS platform.
+# Lintvertex
