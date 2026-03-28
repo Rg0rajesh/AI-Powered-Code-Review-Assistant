@@ -51,16 +51,6 @@ class Config:
     # App public URL (used in email links)
     APP_URL = os.getenv("APP_URL", "http://localhost:5000")
 
-    # SMTP Email
-    SMTP_HOST = os.getenv("SMTP_HOST", "smtp.gmail.com")
-    SMTP_PORT = int(os.getenv("SMTP_PORT", "465"))
-    SMTP_USER = os.getenv("SMTP_USER", "")
-    SMTP_PASSWORD = os.getenv("SMTP_PASSWORD", "")
-    SMTP_FROM = os.getenv("SMTP_FROM", "")
-    SMTP_FROM_NAME = os.getenv("SMTP_FROM_NAME", "LintVertex")
-    SMTP_USE_SSL = os.getenv("SMTP_USE_SSL", "True").lower() == "true"
-    SMTP_USE_TLS = os.getenv("SMTP_USE_TLS", "False").lower() == "true"
-    APP_URL = os.getenv("APP_URL", "http://localhost:5000")
 
     # EmailJS (replaces SMTP)
     EMAILJS_SERVICE_ID          = os.getenv("EMAILJS_SERVICE_ID", "")
