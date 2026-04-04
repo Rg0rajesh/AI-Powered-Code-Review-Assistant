@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sign Up – LintVertex</title>
+  <link rel="stylesheet" href="css/main.css" />
+  <style>
+    body { min-height: 100vh; }
+
+    .signup-layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      min-height: 100vh;
+      padding-top: 64px;
+    }
+
+    .signup-panel {
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 3rem 2rem;
+    }
+
+    .signup-form-wrap {
+      width: 100%;
+      max-width: 460px;
+    }
+
+    .auth-logo { font-size: 1.75rem; font-weight: 800; letter-spacing: -0.04em; margin-bottom: 0.5rem; }
+    .auth-logo span { color: var(--accent); }
+    .auth-heading { font-size: 1.5rem; font-weight: 800; margin-bottom: 0.25rem; }
+    .auth-sub { color: var(--text-secondary); font-size: 0.875rem; margin-bottom: 2.5rem; }
+
+    /* Avatar upload */
+    .avatar-upload {
+      display: flex;
+      align-items: center;
+      gap: 1.25rem;
+      margin-bottom: 1.5rem;
+      padding: 1rem;
+      border: 1px dashed var(--border);
+      border-radius: var(--radius-md);
+      transition: border-color var(--transition);
+      cursor: pointer;
+    }
+
+    .avatar-upload:hover { border-color: var(--accent); }
+
+    .avatar-preview {
+      width: 64px; height: 64px;
+      border-radius: 50%;
+      background: var(--accent-light);
+      border: 2px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      overflow: hidden;
+      flex-shrink: 0;
+      transition: border-color var(--transition);
+    }
+
+    .avatar-preview img { width: 100%; height: 100%; object-fit: cover; }
+
+    .avatar-info { flex: 1; }
+    .avatar-info strong { font-size: 0.875rem; display: block; }
+    .avatar-info small { font-size: 0.75rem; color: var(--text-muted); }
+
+    /* Progress bar */
+    .pwd-strength {
+      height: 4px;
+      border-radius: 2px;
+      background: var(--border);
+      overflow: hidden;
+      margin-top: 0.5rem;
+    }
+    .pwd-bar {
+      height: 100%;
+      border-radius: 2px;
+      transition: width 0.3s ease, background 0.3s ease;
+      width: 0;
+    }
+
+    /* Input row */
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+
+    /* Visual panel */
+    .signup-visual {
+      background: var(--bg-secondary);
+      border-left: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 3rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .step-list {
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+      max-width: 320px;
+    }
+
+    .step-item {
+      display: flex;
+      gap: 1rem;
+      align-items: flex-start;
+    }
+
+    .step-num {
+      width: 2rem;
+      height: 2rem;
+      border-radius: 50%;
+      background: var(--accent-light);
+      border: 1px solid var(--accent);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+      font-weight: 800;
+      color: var(--accent);
+      flex-shrink: 0;
+    }
+
+    .step-content strong { display: block; font-size: 0.9rem; margin-bottom: 0.2rem; }
+    .step-content p { font-size: 0.8rem; color: var(--text-secondary); }
+
+    @media (max-width: 768px) {
+      .signup-layout { grid-template-columns: 1fr; }
+      .signup-visual { display: none; }
+      .form-row { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <nav class="navbar">
+    <a href="/index.html" class="logo-text">Lint<span>Vertex</span></a>
+    <div style="display:flex;align-items:center;gap:1rem">
+      <span style="color:var(--text-muted);font-size:0.875rem">Already have an account?</span>
+      <a href="/login.html" class="btn btn-ghost btn-sm">Sign In</a>
+      <div class="theme-toggle">
+        <span class="theme-label">☀️</span>
+        <button class="toggle-track"><div class="toggle-thumb"></div></button>
+      </div>
+    </div>
+  </nav>
+
+  <div class="signup-layout">
+    <!-- Form -->
+    <div class="signup-panel animate-fade-in">
+      <div class="signup-form-wrap">
+        <div class="auth-logo">Lint<span>Vertex</span></div>
+        <h1 class="auth-heading">Create your account</h1>
+        <p class="auth-sub">Free forever. No credit card needed.</p>
+
+        <form id="signupForm" novalidate enctype="multipart/form-data">
+          <!-- Avatar Upload -->
+          <div class="avatar-upload" id="avatarUpload" onclick="document.getElementById('avatarInput').click()">
+            <div class="avatar-preview" id="avatarPreview">👤</div>
+            <div class="avatar-info">
+              <strong>Profile Photo</strong>
+              <small>JPG or PNG · Max 2MB · Optional</small>
+            </div>
+            <input type="file" id="avatarInput" accept="image/jpeg,image/png" style="display:none" />
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Username</label>
+              <input type="text" class="form-input" id="username"
+                placeholder="cool_dev" required autocomplete="username" />
+              <span class="form-error" id="usernameErr"></span>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Email</label>
+              <input type="email" class="form-input" id="email"
+                placeholder="you@example.com" required />
+              <span class="form-error" id="emailErr"></span>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Address</label>
+            <input type="text" class="form-input" id="address"
+              placeholder="City, Country" required />
+            <span class="form-error" id="addressErr"></span>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Password</label>
+            <div style="position:relative">
+              <input type="password" class="form-input" id="password"
+                placeholder="Min. 8 chars, 1 uppercase, 1 number"
+                style="padding-right:3rem;width:100%" required />
+              <button type="button" id="togglePwd"
+                style="position:absolute;right:0.75rem;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--text-muted)">👁</button>
+            </div>
+            <div class="pwd-strength">
+              <div class="pwd-bar" id="pwdBar"></div>
+            </div>
+            <span class="form-error" id="passwordErr"></span>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Confirm Password</label>
+            <input type="password" class="form-input" id="confirmPassword"
+              placeholder="••••••••" required />
+            <span class="form-error" id="confirmErr"></span>
+          </div>
+
+          <button type="submit" class="btn btn-primary btn-full btn-lg" id="submitBtn">
+            Create Account
+          </button>
+
+          <div id="signupError" style="display:none;margin-top:1rem;padding:0.75rem;background:rgba(192,57,43,0.1);border:1px solid var(--error);border-radius:var(--radius-md);color:var(--error);font-size:0.875rem"></div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Visual -->
+    <div class="signup-visual">
+      <div>
+        <p style="font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:var(--accent);margin-bottom:1.5rem">How it works</p>
+        <div class="step-list stagger">
+          <div class="step-item">
+            <div class="step-num">1</div>
+            <div class="step-content">
+              <strong>Create your account</strong>
+              <p>Sign up in seconds with your email. No credit card required.</p>
+            </div>
+          </div>
+          <div class="step-item">
+            <div class="step-num">2</div>
+            <div class="step-content">
+              <strong>Paste or upload code</strong>
+              <p>Drop in any Java, Python, C, or C++ — LintVertex detects the language automatically.</p>
+            </div>
+          </div>
+          <div class="step-item">
+            <div class="step-num">3</div>
+            <div class="step-content">
+              <strong>Get AI-powered analysis</strong>
+              <p>Gemini AI + ML models surface bugs, quality scores, and improvement tips in seconds.</p>
+            </div>
+          </div>
+          <div class="step-item">
+            <div class="step-num">4</div>
+            <div class="step-content">
+              <strong>Collaborate with your team</strong>
+              <p>Create a discussion room, share the key, and chat live about your code.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/app.js"></script>
+  <script>
+    if (Auth.isLoggedIn()) window.location.href = "/dashboard.html";
+
+    // Avatar preview
+    document.getElementById("avatarInput").addEventListener("change", (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        const preview = document.getElementById("avatarPreview");
+        preview.innerHTML = `<img src="${ev.target.result}" alt="Avatar" />`;
+      };
+      reader.readAsDataURL(file);
+    });
+
+    // Password toggle
+    document.getElementById("togglePwd").addEventListener("click", () => {
+      const p = document.getElementById("password");
+      p.type = p.type === "password" ? "text" : "password";
+    });
+
+    // Password strength
+    document.getElementById("password").addEventListener("input", (e) => {
+      const v = e.target.value;
+      let strength = 0;
+      if (v.length >= 8) strength++;
+      if (/[A-Z]/.test(v)) strength++;
+      if (/[0-9]/.test(v)) strength++;
+      if (/[^A-Za-z0-9]/.test(v)) strength++;
+
+      const bar = document.getElementById("pwdBar");
+      const colors = ["#e74c3c", "#e67e22", "#f1c40f", "#27ae60"];
+      bar.style.width = `${strength * 25}%`;
+      bar.style.background = colors[strength - 1] || "transparent";
+    });
+
+    // Live username validation
+    document.getElementById("username").addEventListener("input", (e) => {
+      const v = e.target.value;
+      const err = document.getElementById("usernameErr");
+      if (v && !/^[a-zA-Z0-9_]+$/.test(v)) {
+        err.textContent = "Only letters, numbers, underscores";
+        e.target.classList.add("error");
+      } else {
+        err.textContent = "";
+        e.target.classList.remove("error");
+      }
+    });
+
+    // Signup form
+    document.getElementById("signupForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const username = document.getElementById("username").value.trim();
+      const email = document.getElementById("email").value.trim();
+      const address = document.getElementById("address").value.trim();
+      const password = document.getElementById("password").value;
+      const confirm = document.getElementById("confirmPassword").value;
+      const avatarFile = document.getElementById("avatarInput").files[0];
+      const btn = document.getElementById("submitBtn");
+      const errDiv = document.getElementById("signupError");
+
+      errDiv.style.display = "none";
+
+      // Client-side validation
+      let valid = true;
+      const setErr = (id, msg) => {
+        const el = document.getElementById(id);
+        el.textContent = msg;
+        if (msg) valid = false;
+      };
+
+      setErr("usernameErr", !username ? "Username required" : username.length < 3 ? "Min 3 characters" : "");
+      setErr("emailErr", !email ? "Email required" : !/^[^@]+@[^@]+\.[^@]+$/.test(email) ? "Invalid email" : "");
+      setErr("addressErr", !address ? "Address required" : "");
+      setErr("passwordErr", password.length < 8 ? "Min 8 characters" : !/[A-Z]/.test(password) ? "Need 1 uppercase" : !/[0-9]/.test(password) ? "Need 1 number" : "");
+      setErr("confirmErr", password !== confirm ? "Passwords don't match" : "");
+
+      if (!valid) return;
+
+      btn.disabled = true;
+      btn.innerHTML = '<div class="spinner"></div> Creating Account...';
+
+      const formData = new FormData();
+      formData.append("username", username);
+      formData.append("email", email);
+      formData.append("address", address);
+      formData.append("password", password);
+      formData.append("confirm_password", confirm);
+      if (avatarFile) formData.append("profile_image", avatarFile);
+
+      const { ok, data } = await API.postForm("/api/auth/signup", formData);
+
+      btn.disabled = false;
+      btn.innerHTML = "Create Account";
+
+      if (ok) {
+        Auth.setSession(data.token, data.user);
+        Toast.success("Account created! Welcome to LintVertex 🎉");
+        setTimeout(() => window.location.href = "/dashboard.html", 600);
+      } else {
+        let msg = data.error || "Signup failed";
+        if (data.details) {
+          msg = Object.values(data.details).join(" · ");
+        }
+        errDiv.textContent = msg;
+        errDiv.style.display = "block";
+      }
+    });
+  </script>
+</body>
+</html>

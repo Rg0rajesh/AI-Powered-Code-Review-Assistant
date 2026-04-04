@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Maintenance · LintVertex</title>
+  <link rel="stylesheet" href="/css/main.css"/>
+  <style>
+    body {
+      min-height:100vh;display:flex;flex-direction:column;
+      align-items:center;justify-content:center;
+      padding:2rem;overflow:hidden;
+    }
+
+    .error-wrap { position:relative;z-index:1;text-align:center;max-width:580px; }
+
+    /* Yellow caution tape stripes top & bottom */
+    .caution-tape {
+      position:fixed; left:0; right:0; height:8px;
+      background:repeating-linear-gradient(
+        90deg,
+        var(--accent) 0px, var(--accent) 30px,
+        var(--bg-secondary) 30px, var(--bg-secondary) 60px
+      );
+      opacity:0.4;
+      z-index:100;
+    }
+    .caution-tape.top    { top:0; }
+    .caution-tape.bottom { bottom:0; }
+
+    /* Scene */
+    .scene { width:340px;height:280px;margin:0 auto 2rem;position:relative; }
+
+    /* Ground / Platform */
+    .platform {
+      position:absolute;bottom:0;left:0;right:0;height:40px;
+      background:var(--bg-secondary);border:1px solid var(--border);
+      border-radius:var(--radius-md);overflow:hidden;
+    }
+    /* Caution stripes on platform */
+    .platform::after {
+      content:"";position:absolute;inset:0;
+      background:repeating-linear-gradient(
+        45deg, transparent 0px, transparent 8px,
+        var(--accent) 8px, var(--accent) 10px
+      );
+      opacity:0.08;
+    }
+
+    /* Construction worker */
+    .worker {
+      position:absolute;bottom:32px;left:50%;
+      transform:translateX(-60%);
+    }
+
+    /* Hammer animation */
+    .hammer-arm {
+      transform-origin: right center;
+      animation:hammerSwing 0.8s ease-in-out infinite;
+    }
+    @keyframes hammerSwing {
+      0%,100% { transform:rotate(-30deg); }
+      50%      { transform:rotate(20deg); }
+    }
+
+    /* Ground shake from hammering */
+    .scene { animation:groundShake 0.8s ease-in-out infinite; }
+    @keyframes groundShake {
+      0%,100% { transform:none; }
+      48%,52% { transform:translateY(1px); }
+      50%      { transform:translateY(2px); }
+    }
+
+    /* Scaffolding */
+    .scaffolding {
+      position:absolute;right:30px;bottom:32px;
+    }
+
+    /* Particles from hammer */
+    .chip {
+      position:absolute;
+      width:4px;height:4px;
+      border-radius:1px;
+      background:var(--accent);
+      opacity:0;
+      animation:chipFly ease-out infinite;
+    }
+    @keyframes chipFly {
+      0%   { transform:translate(0,0) rotate(0deg); opacity:0.8; }
+      100% { transform:translate(var(--cx),var(--cy)) rotate(360deg); opacity:0; }
+    }
+
+    /* Progress bar */
+    .maintenance-progress {
+      margin:1.5rem auto;
+      max-width:400px;
+    }
+    .prog-label {
+      display:flex;justify-content:space-between;
+      font-size:0.78rem;color:var(--text-muted);margin-bottom:0.5rem;font-family:var(--font-mono);
+    }
+    .prog-track {
+      height:10px;background:var(--bg-secondary);
+      border:1px solid var(--border);border-radius:100px;overflow:hidden;
+    }
+    .prog-fill {
+      height:100%;background:var(--accent);border-radius:100px;
+      transition:width 2s ease;width:0%;
+    }
+
+    /* Estimated time */
+    .est-time {
+      display:inline-flex;align-items:center;gap:0.5rem;
+      padding:0.5rem 1rem;
+      background:var(--accent-light);
+      border:1px solid var(--glass-border);
+      border-radius:100px;
+      font-size:0.82rem;font-weight:600;
+      color:var(--accent);
+      margin-bottom:1.5rem;
+    }
+
+    /* Status checklist */
+    .status-list {
+      list-style:none;
+      display:flex;flex-direction:column;gap:0.5rem;
+      text-align:left;
+      max-width:360px;
+      margin:0 auto 2rem;
+    }
+    .status-item {
+      display:flex;align-items:center;gap:0.75rem;
+      font-size:0.875rem;color:var(--text-secondary);
+    }
+    .status-icon { font-size:1rem;flex-shrink:0; }
+    .status-done   .status-icon::before { content:"✅"; }
+    .status-active .status-icon::before { content:"🔄"; animation:spin 1s linear infinite; display:inline-block; }
+    .status-wait   .status-icon::before { content:"⏳"; }
+    @keyframes spin { to { transform:rotate(360deg); } }
+
+    /* Error text */
+    .error-code  { font-size:0.78rem;font-weight:700;text-transform:uppercase;letter-spacing:0.14em;color:var(--accent);margin-bottom:0.75rem; }
+    .error-title { font-size:clamp(1.5rem,4vw,2rem);font-weight:800;letter-spacing:-0.03em;margin-bottom:0.75rem; }
+    .error-body  { color:var(--text-secondary);font-size:0.95rem;line-height:1.65;margin-bottom:1.5rem;max-width:420px;margin-left:auto;margin-right:auto; }
+    .error-actions { display:flex;gap:0.75rem;justify-content:center;flex-wrap:wrap; }
+
+    .orb { position:fixed;border-radius:50%;background:var(--accent);opacity:0.05;pointer-events:none; }
+  </style>
+</head>
+<body>
+  <div class="caution-tape top"></div>
+  <div class="caution-tape bottom"></div>
+
+  <div class="orb" style="width:350px;height:350px;top:-100px;left:-80px"></div>
+  <div class="orb" style="width:220px;height:220px;bottom:-60px;right:-50px"></div>
+
+  <nav class="navbar" style="z-index:200">
+    <a href="/index.html" class="logo-text">Lint<span>Vertex</span></a>
+    <div class="theme-toggle"><span class="theme-label">☀️</span><button class="toggle-track"><div class="toggle-thumb"></div></button></div>
+  </nav>
+
+  <div class="error-wrap">
+    <div class="scene">
+
+      <!-- Scaffolding -->
+      <div class="scaffolding">
+        <svg width="80" height="160" viewBox="0 0 80 160" fill="none">
+          <!-- Vertical poles -->
+          <rect x="8"  y="0" width="6" height="160" rx="3" fill="var(--bg-secondary)" stroke="var(--border)" stroke-width="1.5"/>
+          <rect x="66" y="0" width="6" height="160" rx="3" fill="var(--bg-secondary)" stroke="var(--border)" stroke-width="1.5"/>
+          <!-- Horizontal platforms -->
+          <rect x="4"  y="30"  width="72" height="8" rx="3" fill="var(--accent)" opacity="0.2" stroke="var(--accent)" stroke-width="1.5" opacity="0.5"/>
+          <rect x="4"  y="80"  width="72" height="8" rx="3" fill="var(--accent)" opacity="0.2" stroke="var(--accent)" stroke-width="1.5" opacity="0.5"/>
+          <rect x="4"  y="130" width="72" height="8" rx="3" fill="var(--accent)" opacity="0.2" stroke="var(--accent)" stroke-width="1.5" opacity="0.5"/>
+          <!-- Diagonal braces -->
+          <line x1="14" y1="30" x2="66" y2="80"  stroke="var(--border)" stroke-width="1.5" stroke-dasharray="4,3"/>
+          <line x1="66" y1="30" x2="14" y2="80"  stroke="var(--border)" stroke-width="1.5" stroke-dasharray="4,3"/>
+          <line x1="14" y1="80" x2="66" y2="130" stroke="var(--border)" stroke-width="1.5" stroke-dasharray="4,3"/>
+          <line x1="66" y1="80" x2="14" y2="130" stroke="var(--border)" stroke-width="1.5" stroke-dasharray="4,3"/>
+        </svg>
+      </div>
+
+      <!-- Chips from hammering -->
+      <div class="chip" style="left:145px;top:130px;animation-duration:0.8s;animation-delay:0s;--cx:-20px;--cy:-30px"></div>
+      <div class="chip" style="left:155px;top:135px;animation-duration:0.7s;animation-delay:0.3s;--cx:15px;--cy:-25px;background:var(--bg-secondary)"></div>
+      <div class="chip" style="left:140px;top:140px;animation-duration:0.9s;animation-delay:0.6s;--cx:-10px;--cy:-40px"></div>
+
+      <!-- Construction Worker SVG -->
+      <div class="worker">
+        <svg width="100" height="180" viewBox="0 0 100 180" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <!-- Hard hat -->
+          <ellipse cx="50" cy="16" rx="30" ry="10" fill="var(--accent)" opacity="0.9"/>
+          <rect x="24" y="16" width="52" height="6" rx="3" fill="var(--accent)" opacity="0.7"/>
+          <!-- Brim -->
+          <rect x="18" y="22" width="64" height="4" rx="2" fill="var(--accent)" opacity="0.5"/>
+          <!-- Hat band -->
+          <rect x="26" y="12" width="48" height="4" rx="2" fill="var(--bg-secondary)" stroke="var(--border)" stroke-width="1"/>
+          <!-- Head -->
+          <rect x="28" y="26" width="44" height="36" rx="10" fill="var(--bg-card)" stroke="var(--border)" stroke-width="2"/>
+          <!-- Eyes - determined squint -->
+          <path d="M34 38 L42 36" stroke="var(--text-primary)" stroke-width="2.5" stroke-linecap="round" opacity="0.8"/>
+          <path d="M58 36 L66 38" stroke="var(--text-primary)" stroke-width="2.5" stroke-linecap="round" opacity="0.8"/>
+          <!-- Eyes circles -->
+          <circle cx="38" cy="40" r="4" fill="var(--bg-secondary)" stroke="var(--border)" stroke-width="1.5"/>
+          <circle cx="62" cy="40" r="4" fill="var(--bg-secondary)" stroke="var(--border)" stroke-width="1.5"/>
+          <circle cx="38" cy="40" r="2" fill="var(--text-primary)" opacity="0.8"/>
+          <circle cx="62" cy="40" r="2" fill="var(--text-primary)" opacity="0.8"/>
+          <!-- Focused mouth -->
+          <path d="M40 54 Q50 52 60 54" stroke="var(--border)" stroke-width="2" fill="none" stroke-linecap="round"/>
+          <!-- Sweat drop (working hard) -->
+          <ellipse cx="72" cy="40" rx="3" ry="5" fill="var(--info,#2980b9)" opacity="0.5">
+            <animate attributeName="cy" values="40;48;40" dur="1.2s" repeatCount="indefinite"/>
+            <animate attributeName="opacity" values="0.5;0;0.5" dur="1.2s" repeatCount="indefinite"/>
+          </ellipse>
+          <!-- Neck -->
+          <rect x="40" y="62" width="20" height="8" rx="3" fill="var(--bg-secondary)" stroke="var(--border)" stroke-width="1.5"/>
+          <!-- Body (overalls) -->
+          <rect x="14" y="70" width="72" height="52" rx="10" fill="var(--accent)" opacity="0.85"/>
+          <!-- Overalls straps -->
+          <rect x="36" y="62" width="8" height="16" rx="3" fill="var(--accent)" opacity="0.7"/>
+          <rect x="56" y="62" width="8" height="16" rx="3" fill="var(--accent)" opacity="0.7"/>
+          <!-- Pocket -->
+          <rect x="30" y="82" width="20" height="16" rx="3" fill="var(--bg-primary)" stroke="var(--bg-secondary)" stroke-width="1.5" opacity="0.5"/>
+          <!-- Belt -->
+          <rect x="14" y="114" width="72" height="8" rx="3" fill="var(--bg-secondary)" stroke="var(--border)" stroke-width="1.5"/>
+          <!-- Left arm (body side) -->
+          <rect x="-2" y="74" width="18" height="12" rx="6" fill="var(--bg-card)" stroke="var(--border)" stroke-width="2"/>
+          <!-- Right arm (hammering!) -->
+          <g class="hammer-arm">
+            <rect x="84" y="74" width="18" height="12" rx="6" fill="var(--bg-card)" stroke="var(--border)" stroke-width="2"/>
+            <!-- Forearm extended -->
+            <rect x="100" y="70" width="18" height="10" rx="5" fill="var(--bg-card)" stroke="var(--border)" stroke-width="2"/>
+            <!-- Hammer head -->
+            <rect x="114" y="60" width="22" height="30" rx="4" fill="var(--bg-secondary)" stroke="var(--border)" stroke-width="2"/>
+            <!-- Hammer handle grip -->
+            <rect x="120" y="88" width="10" height="28" rx="3" fill="var(--accent)" opacity="0.6"/>
+          </g>
+          <!-- Legs -->
+          <rect x="24" y="122" width="22" height="34" rx="6" fill="var(--accent)" opacity="0.75"/>
+          <rect x="54" y="122" width="22" height="34" rx="6" fill="var(--accent)" opacity="0.75"/>
+          <!-- Boots -->
+          <rect x="18" y="150" width="28" height="12" rx="5" fill="var(--bg-secondary)" stroke="var(--border)" stroke-width="2"/>
+          <rect x="54" y="150" width="28" height="12" rx="5" fill="var(--bg-secondary)" stroke="var(--border)" stroke-width="2"/>
+        </svg>
+      </div>
+
+      <!-- Platform (ground) -->
+      <div class="platform"></div>
+    </div>
+
+    <p class="error-code">503 — Scheduled Maintenance</p>
+    <h1 class="error-title">We're building something better 🏗️</h1>
+    <p class="error-body">
+      LintVertex is undergoing planned maintenance. Our construction crew is working hard
+      to improve the platform. We'll be back online shortly!
+    </p>
+
+    <div class="est-time">
+      🕐 Estimated completion: <strong>~30 minutes</strong>
+    </div>
+
+    <!-- Progress -->
+    <div class="maintenance-progress">
+      <div class="prog-label">
+        <span>Maintenance Progress</span>
+        <span id="progPct">0%</span>
+      </div>
+      <div class="prog-track">
+        <div class="prog-fill" id="progFill"></div>
+      </div>
+    </div>
+
+    <!-- Status checklist -->
+    <ul class="status-list">
+      <li class="status-item status-done">
+        <span class="status-icon"></span>
+        <span>Database backup completed</span>
+      </li>
+      <li class="status-item status-done">
+        <span class="status-icon"></span>
+        <span>New features deployed to staging</span>
+      </li>
+      <li class="status-item status-active">
+        <span class="status-icon"></span>
+        <span>Running final system checks...</span>
+      </li>
+      <li class="status-item status-wait">
+        <span class="status-icon"></span>
+        <span>Restoring production traffic</span>
+      </li>
+    </ul>
+
+    <div class="error-actions">
+      <button class="btn btn-primary btn-lg" onclick="window.location.reload()">🔄 Check Again</button>
+      <a href="mailto:support@lintvertex.com" class="btn btn-ghost btn-lg">📧 Contact Support</a>
+    </div>
+  </div>
+
+  <script src="/js/app.js"></script>
+  <script>
+    // Animated progress bar
+    let pct = 0;
+    const fill  = document.getElementById("progFill");
+    const label = document.getElementById("progPct");
+
+    // Start at a random "already in progress" value
+    pct = Math.floor(Math.random() * 40 + 30);
+    fill.style.width  = pct + "%";
+    label.textContent = pct + "%";
+
+    // Slowly increment
+    const prog = setInterval(() => {
+      if (pct < 95) {
+        pct += Math.random() * 2;
+        pct = Math.min(pct, 95);
+        fill.style.width  = pct.toFixed(1) + "%";
+        label.textContent = Math.round(pct) + "%";
+      } else {
+        clearInterval(prog);
+      }
+    }, 3000);
+  </script>
+</body>
+</html>

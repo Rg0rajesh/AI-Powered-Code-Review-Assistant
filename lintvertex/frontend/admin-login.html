@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Login – LintVertex</title>
+  <link rel="stylesheet" href="css/main.css" />
+  <style>
+    /* ── Restricted Page Aesthetic ── */
+    body {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--bg-primary);
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Ominous grid background */
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(var(--border) 1px, transparent 1px),
+        linear-gradient(90deg, var(--border) 1px, transparent 1px);
+      background-size: 40px 40px;
+      opacity: 0.3;
+      pointer-events: none;
+    }
+
+    /* Corner security tape */
+    .security-stripe {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 4px;
+      background: repeating-linear-gradient(
+        90deg,
+        var(--error) 0px, var(--error) 20px,
+        transparent 20px, transparent 40px
+      );
+      opacity: 0.6;
+    }
+
+    .admin-login-wrap {
+      width: 100%;
+      max-width: 420px;
+      padding: 2rem;
+      position: relative;
+      z-index: 10;
+    }
+
+    .admin-badge {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 0.875rem;
+      background: rgba(192, 57, 43, 0.1);
+      border: 1px solid rgba(192, 57, 43, 0.3);
+      border-radius: 100px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--error);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 1.5rem;
+      width: fit-content;
+    }
+
+    .admin-badge::before {
+      content: "";
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--error);
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+
+    .login-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 2rem;
+      box-shadow: var(--shadow-lg);
+      position: relative;
+    }
+
+    /* Red top accent border */
+    .login-card::before {
+      content: "";
+      position: absolute;
+      top: 0; left: 2rem; right: 2rem;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--error), transparent);
+      border-radius: 0 0 2px 2px;
+    }
+
+    .shield-icon {
+      font-size: 2.5rem;
+      margin-bottom: 1rem;
+      display: block;
+      text-align: center;
+    }
+
+    .card-title {
+      font-size: 1.25rem;
+      font-weight: 800;
+      text-align: center;
+      margin-bottom: 0.25rem;
+    }
+
+    .card-sub {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    /* Attempt counter */
+    .attempt-counter {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      margin-bottom: 1.25rem;
+      padding: 0.5rem 0.75rem;
+      background: var(--bg-secondary);
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+    }
+
+    .attempt-dots {
+      display: flex;
+      gap: 4px;
+    }
+
+    .attempt-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--border);
+      transition: background 0.3s;
+    }
+
+    .attempt-dot.used { background: var(--error); }
+
+    /* Lockout overlay */
+    .lockout-overlay {
+      display: none;
+      position: absolute;
+      inset: 0;
+      background: var(--bg-card);
+      border-radius: var(--radius-lg);
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 2rem;
+      z-index: 10;
+    }
+
+    .lockout-overlay.show { display: flex; }
+
+    .lockout-icon { font-size: 3rem; margin-bottom: 1rem; }
+
+    .countdown {
+      font-size: 2rem;
+      font-weight: 800;
+      font-family: var(--font-mono);
+      color: var(--error);
+      margin: 0.5rem 0;
+    }
+
+    /* Security info panel */
+    .security-info {
+      margin-top: 1.5rem;
+      padding: 1rem;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      font-size: 0.72rem;
+      color: var(--text-muted);
+    }
+
+    .security-info ul {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+
+    .security-info li::before {
+      content: "🔒 ";
+    }
+
+    .back-link {
+      display: block;
+      text-align: center;
+      margin-top: 1.25rem;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      text-decoration: none;
+    }
+
+    .back-link:hover { color: var(--text-primary); }
+
+    /* Theme toggle top-right */
+    .top-right {
+      position: fixed;
+      top: 1.5rem;
+      right: 1.5rem;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="security-stripe"></div>
+
+  <div class="top-right">
+    <span class="theme-label">☀️</span>
+    <button class="toggle-track"><div class="toggle-thumb"></div></button>
+  </div>
+
+  <div class="admin-login-wrap animate-fade-in">
+    <div class="admin-badge">🛡️ Restricted Access</div>
+
+    <div class="login-card">
+      <!-- Lockout overlay -->
+      <div class="lockout-overlay" id="lockoutOverlay">
+        <div class="lockout-icon">🔒</div>
+        <div style="font-weight:800;font-size:1.1rem;margin-bottom:0.5rem">Access Temporarily Blocked</div>
+        <p style="font-size:0.8rem;color:var(--text-muted);margin-bottom:1rem">
+          Too many failed attempts. Try again in:
+        </p>
+        <div class="countdown" id="lockoutCountdown">00:00</div>
+        <p style="font-size:0.72rem;color:var(--text-muted);margin-top:0.75rem">
+          This event has been logged and flagged for review.
+        </p>
+      </div>
+
+      <span class="shield-icon">🛡️</span>
+      <div class="card-title">Admin Authentication</div>
+      <p class="card-sub">LintVertex secure admin portal</p>
+
+      <!-- Attempt counter (shows after first failure) -->
+      <div class="attempt-counter" id="attemptCounter" style="display:none">
+        <span>Failed attempts</span>
+        <div class="attempt-dots">
+          <div class="attempt-dot" id="dot1"></div>
+          <div class="attempt-dot" id="dot2"></div>
+          <div class="attempt-dot" id="dot3"></div>
+          <div class="attempt-dot" id="dot4"></div>
+          <div class="attempt-dot" id="dot5"></div>
+        </div>
+      </div>
+
+      <form id="adminLoginForm" novalidate autocomplete="off">
+        <!-- Honeypot field (bots fill this, humans don't) -->
+        <div style="display:none" aria-hidden="true">
+          <input type="text" name="username" tabindex="-1" />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Admin Email</label>
+          <input
+            type="email"
+            class="form-input"
+            id="adminEmail"
+            placeholder="admin@lintvertex.com"
+            autocomplete="off"
+            spellcheck="false"
+            required
+          />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Admin Password</label>
+          <div style="position:relative">
+            <input
+              type="password"
+              class="form-input"
+              id="adminPassword"
+              placeholder="••••••••••••"
+              autocomplete="new-password"
+              style="padding-right:3rem;width:100%"
+              required
+            />
+            <button type="button" id="togglePwd"
+              style="position:absolute;right:0.75rem;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--text-muted)">
+              👁
+            </button>
+          </div>
+        </div>
+
+        <div id="loginError"
+          style="display:none;padding:0.75rem;background:rgba(192,57,43,0.08);border:1px solid rgba(192,57,43,0.3);border-radius:var(--radius-sm);color:var(--error);font-size:0.8rem;margin-bottom:1rem">
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-full" id="submitBtn"
+          style="background:var(--error);color:white">
+          🔐 Authenticate as Admin
+        </button>
+      </form>
+
+      <div class="security-info">
+        <ul>
+          <li>Session expires in 2 hours</li>
+          <li>Token is IP-bound to this device</li>
+          <li>All actions are audited and logged</li>
+          <li>5 failed attempts triggers 30-minute lockout</li>
+        </ul>
+      </div>
+    </div>
+
+    <a href="/login.html" class="back-link">← Back to regular login</a>
+  </div>
+
+  <script src="js/app.js"></script>
+  <script>
+    // Storage key for admin token (separate from user token)
+    const ADMIN_TOKEN_KEY = "lv_admin_token";
+    const ADMIN_USER_KEY  = "lv_admin_user";
+    const ADMIN_JTI_KEY   = "lv_admin_jti";
+
+    // If already authenticated as admin, go to panel
+    if (localStorage.getItem(ADMIN_TOKEN_KEY)) {
+      window.location.href = "/admin.html";
+    }
+
+    let failCount = 0;
+    let lockoutUntil = 0;
+    let lockoutInterval = null;
+
+    // ── Password Toggle ─────────────────────────────────────────
+    document.getElementById("togglePwd").addEventListener("click", () => {
+      const p = document.getElementById("adminPassword");
+      p.type = p.type === "password" ? "text" : "password";
+    });
+
+    // ── Lockout Timer ───────────────────────────────────────────
+    function startLockoutTimer(seconds) {
+      lockoutUntil = Date.now() + seconds * 1000;
+      document.getElementById("lockoutOverlay").classList.add("show");
+      lockoutInterval = setInterval(updateLockoutDisplay, 1000);
+      updateLockoutDisplay();
+    }
+
+    function updateLockoutDisplay() {
+      const remaining = Math.max(0, Math.ceil((lockoutUntil - Date.now()) / 1000));
+      const m = String(Math.floor(remaining / 60)).padStart(2, "0");
+      const s = String(remaining % 60).padStart(2, "0");
+      document.getElementById("lockoutCountdown").textContent = `${m}:${s}`;
+      if (remaining <= 0) {
+        clearInterval(lockoutInterval);
+        document.getElementById("lockoutOverlay").classList.remove("show");
+        failCount = 0;
+        updateAttemptDots();
+      }
+    }
+
+    // ── Attempt Dots ────────────────────────────────────────────
+    function updateAttemptDots() {
+      for (let i = 1; i <= 5; i++) {
+        document.getElementById(`dot${i}`).classList.toggle("used", i <= failCount);
+      }
+      if (failCount > 0) {
+        document.getElementById("attemptCounter").style.display = "flex";
+      }
+    }
+
+    // ── Login Form ──────────────────────────────────────────────
+    document.getElementById("adminLoginForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const email = document.getElementById("adminEmail").value.trim();
+      const password = document.getElementById("adminPassword").value;
+      const errDiv = document.getElementById("loginError");
+      const btn = document.getElementById("submitBtn");
+
+      errDiv.style.display = "none";
+
+      if (!email || !password) {
+        errDiv.textContent = "Email and password are required.";
+        errDiv.style.display = "block";
+        return;
+      }
+
+      btn.disabled = true;
+      btn.innerHTML = '<div class="spinner"></div> Authenticating...';
+
+      // Use the dedicated admin login endpoint
+      const { ok, status, data } = await API.post("/api/admin/login", { email, password });
+
+      btn.disabled = false;
+      btn.innerHTML = "🔐 Authenticate as Admin";
+
+      if (ok) {
+        // Store admin token separately from regular token
+        localStorage.setItem(ADMIN_TOKEN_KEY, data.token);
+        localStorage.setItem(ADMIN_USER_KEY, JSON.stringify(data.user));
+        localStorage.setItem(ADMIN_JTI_KEY, data.jti);
+
+        Toast.success("Admin authenticated — session active for 2 hours");
+        setTimeout(() => window.location.href = "/admin.html", 600);
+      } else {
+        failCount++;
+        updateAttemptDots();
+
+        if (status === 429) {
+          const lockSecs = data.locked_for_seconds || 1800;
+          startLockoutTimer(lockSecs);
+        } else {
+          // Generic error — never tell attacker WHY
+          errDiv.textContent = "Authentication failed. Verify your credentials.";
+          errDiv.style.display = "block";
+
+          // Shake animation
+          const card = document.querySelector(".login-card");
+          card.style.animation = "none";
+          card.offsetHeight;
+          card.style.animation = "shakeCard 0.4s ease";
+        }
+      }
+    });
+  </script>
+
+  <style>
+    @keyframes shakeCard {
+      0%, 100% { transform: translateX(0); }
+      20%       { transform: translateX(-8px); }
+      40%       { transform: translateX(8px); }
+      60%       { transform: translateX(-5px); }
+      80%       { transform: translateX(5px); }
+    }
+  </style>
+</body>
+</html>

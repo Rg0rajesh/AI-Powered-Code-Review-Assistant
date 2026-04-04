@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Panel – LintVertex</title>
+  <link rel="stylesheet" href="css/main.css" />
+  <style>
+    .admin-top-bar {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.75rem 1.25rem;
+      background: linear-gradient(135deg, rgba(192, 57, 43, 0.06), transparent);
+      border: 1px solid rgba(192, 57, 43, 0.2);
+      border-radius: var(--radius-md);
+      margin-bottom: 2rem;
+      font-size: 0.8rem;
+      flex-wrap: wrap;
+    }
+
+    .admin-top-bar .live-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--success);
+      animation: pulse 2s infinite;
+      flex-shrink: 0;
+    }
+
+    .session-timer {
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      margin-left: auto;
+    }
+
+    .session-timer.warn {
+      color: var(--warning);
+      font-weight: 700;
+    }
+
+    .session-timer.crit {
+      color: var(--error);
+      font-weight: 700;
+    }
+
+    .log-item {
+      padding: 0.625rem 0.875rem;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.78rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 1rem;
+    }
+
+    .log-item:last-child {
+      border-bottom: none;
+    }
+
+    .log-action {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      color: var(--text-secondary);
+    }
+
+    .log-intrusion {
+      background: rgba(192, 57, 43, 0.05);
+    }
+
+    .sec-stat {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 1rem 1.25rem;
+    }
+
+    .sec-stat-value {
+      font-size: 1.75rem;
+      font-weight: 800;
+      font-family: var(--font-mono);
+    }
+
+    .sec-stat-label {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .lockout-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+      font-size: 0.7rem;
+      font-weight: 700;
+      padding: 0.2rem 0.6rem;
+      border-radius: 100px;
+      background: rgba(192, 57, 43, 0.12);
+      color: var(--error);
+    }
+  </style>
+</head>
+
+<body>
+  <nav class="navbar">
+    <a href="/index.html" class="logo-text">Lint<span>Vertex</span></a>
+    <ul class="nav-links">
+      <li><a href="/dashboard.html">Dashboard</a></li>
+      <li><a href="/analyze.html">Analyze</a></li>
+      <li><a href="/rooms.html">Rooms</a></li>
+    </ul>
+    <div style="display:flex;align-items:center;gap:0.75rem">
+      <div class="theme-toggle">
+        <span class="theme-label">☀️</span>
+        <button class="toggle-track">
+          <div class="toggle-thumb"></div>
+        </button>
+      </div>
+
+      <a href="/notifications.html" class="notif-bell" data-notif-count="0" title="Notifications">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+          <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+        </svg>
+        <span class="notif-badge" style="display:none">0</span>
+      </a>
+
+      <button class="btn btn-danger btn-sm" onclick="adminLogout()">🔒 End Session</button>
+    </div>
+  </nav>
+
+  <div class="layout">
+    <aside class="sidebar">
+      <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:1.5rem;padding:0 0.25rem">
+        <div id="sidebarAvatar"
+          style="width:36px;height:36px;border-radius:50%;background:var(--accent-light);border:2px solid var(--accent);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.8rem;overflow:hidden;flex-shrink:0">
+        </div>
+        <div>
+          <div style="font-weight:700;font-size:0.875rem" data-user-name></div>
+          <div style="font-size:0.7rem;color:var(--text-muted)" id="sidebarRole"></div>
+        </div>
+      </div>
+
+      <ul class="sidebar-nav">
+        <li><a href="/dashboard.html"><svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="2">
+              <rect x="3" y="3" width="7" height="7" />
+              <rect x="14" y="3" width="7" height="7" />
+              <rect x="3" y="14" width="7" height="7" />
+              <rect x="14" y="14" width="7" height="7" />
+            </svg>Dashboard</a></li>
+        <li><a href="/admin.html" class="active"><svg class="sidebar-icon" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+            </svg>Admin Panel</a></li>
+        <li><a href="/admin-email.html"><svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="2">
+              <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+              <polyline points="22,6 12,13 2,6" />
+            </svg>Email Center</a></li>
+        <li><a href="/admin-terms.html"><svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="2">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+              <polyline points="14 2 14 8 20 8" />
+              <line x1="16" y1="13" x2="8" y2="13" />
+              <line x1="16" y1="17" x2="8" y2="17" />
+            </svg>Terms Manager</a></li>
+        <li><a href="/admin-notifications.html"><svg class="sidebar-icon" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2">
+              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+              <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+            </svg>Admin Notifications</a></li>
+      </ul>
+    </aside>
+
+    <main class="main-content">
+      <div class="page-title">Admin Panel</div>
+
+      <!-- Admin session info bar -->
+      <div class="admin-top-bar" id="sessionBar">
+        <div class="live-dot"></div>
+        <span>Secure Admin Session</span>
+        <span id="sessionEmail" style="color:var(--accent);font-weight:600"></span>
+        <span id="sessionIp" style="color:var(--text-muted)"></span>
+        <span class="session-timer" id="sessionTimer">Loading session...</span>
+      </div>
+
+      <!-- Quick Access Cards -->
+      <div style="display:flex;gap:0.875rem;margin-bottom:1.5rem;flex-wrap:wrap">
+        <a href="/admin-email.html"
+          style="display:flex;align-items:center;gap:0.625rem;padding:0.625rem 1rem;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-md);text-decoration:none;color:var(--text-primary);font-size:0.82rem;font-weight:600;transition:all 0.2s"
+          onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
+          📧 Email Center
+        </a>
+        <a href="admin-notifications.html"
+          style="display:flex;align-items:center;gap:0.625rem;padding:0.625rem 1rem;background:var(--bg-card);border:1px solid rgba(192,57,43,0.3);border-radius:var(--radius-md);text-decoration:none;color:var(--error);font-size:0.82rem;font-weight:600;transition:all 0.2s">
+          🛡️ Admin Notifications
+        </a>
+        <a href="/admin-terms.html"
+          style="display:flex;align-items:center;gap:0.625rem;padding:0.625rem 1rem;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius-md);text-decoration:none;color:var(--text-primary);font-size:0.82rem;font-weight:600;transition:all 0.2s"
+          onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
+          📋 Update Terms & Conditions
+        </a>
+        <a href="/admin-login.html"
+          style="display:flex;align-items:center;gap:0.625rem;padding:0.625rem 1rem;background:var(--bg-card);border:1px solid rgba(192,57,43,0.3);border-radius:var(--radius-md);text-decoration:none;color:var(--error);font-size:0.82rem;font-weight:600;transition:all 0.2s">
+          🛡️ Admin Login Portal
+        </a>
+      </div>
+
+      <!-- Platform Stats -->
+      <div class="stats-grid stagger" id="adminStats" style="margin-bottom:2rem">
+        <div class="skeleton" style="height:80px;border-radius:var(--radius-lg)"></div>
+        <div class="skeleton" style="height:80px;border-radius:var(--radius-lg)"></div>
+        <div class="skeleton" style="height:80px;border-radius:var(--radius-lg)"></div>
+        <div class="skeleton" style="height:80px;border-radius:var(--radius-lg)"></div>
+      </div>
+
+      <!-- Tabs -->
+      <div class="tabs">
+        <button class="tab-btn active" data-tab="users">👥 Users</button>
+        <button class="tab-btn" data-tab="analyses">📊 Analyses</button>
+        <button class="tab-btn" data-tab="rooms">💬 Rooms</button>
+        <button class="tab-btn" data-tab="feedback">⭐ Feedback</button>
+        <button class="tab-btn" data-tab="security">🛡️ Security</button>
+        <button class="tab-btn" data-tab="logs">📋 Audit Log</button>
+      </div>
+
+      <!-- Users -->
+      <div class="tab-panel active" id="tab-users">
+        <div class="card" style="padding:0;overflow:hidden">
+          <div id="usersTable" style="padding:1rem">
+            <div class="spinner"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Analyses -->
+      <div class="tab-panel" id="tab-analyses">
+        <div class="card" style="padding:0;overflow:hidden">
+          <div id="analysesTable" style="padding:1rem">
+            <div class="spinner"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Rooms -->
+      <div class="tab-panel" id="tab-rooms">
+        <div class="card" style="padding:0;overflow:hidden">
+          <div id="roomsTable" style="padding:1rem">
+            <div class="spinner"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Feedback -->
+      <div class="tab-panel" id="tab-feedback">
+        <div class="card" style="padding:0;overflow:hidden">
+          <div id="feedbackTable" style="padding:1rem">
+            <div class="spinner"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Security Dashboard -->
+      <div class="tab-panel" id="tab-security">
+        <div class="stats-grid stagger" id="secStats" style="margin-bottom:1.5rem"></div>
+        <div class="card">
+          <h3 style="font-size:1rem;font-weight:700;margin-bottom:1rem">🔴 Recent Intrusion Attempts</h3>
+          <div id="intrusionList"></div>
+        </div>
+      </div>
+
+      <!-- Audit Log -->
+      <div class="tab-panel" id="tab-logs">
+        <div class="card" style="padding:0;overflow:hidden;max-height:500px;overflow-y:auto">
+          <div id="auditList"></div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="js/app.js"></script>
+  <script>
+    const ADMIN_TOKEN_KEY = "lv_admin_token";
+    const ADMIN_USER_KEY = "lv_admin_user";
+    const ADMIN_JTI_KEY = "lv_admin_jti";
+
+    // ── Admin API client (uses admin token) ─────────────────────
+    const AdminAPI = {
+      async request(method, path, body = null) {
+        const token = localStorage.getItem(ADMIN_TOKEN_KEY);
+        if (!token) { window.location.href = "/admin-login.html"; return {}; }
+        const headers = {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json",
+        };
+        const res = await fetch(path, { method, headers, body: body ? JSON.stringify(body) : null });
+        const data = await res.json().catch(() => ({}));
+        if (res.status === 401) {
+          localStorage.removeItem(ADMIN_TOKEN_KEY);
+          Toast.error("Admin session expired. Please log in again.");
+          setTimeout(() => window.location.href = "/admin-login.html", 1500);
+        }
+        return { ok: res.ok, status: res.status, data };
+      },
+      get(p) { return this.request("GET", p); },
+      post(p, b) { return this.request("POST", p, b); },
+      put(p, b) { return this.request("PUT", p, b); },
+      delete(p) { return this.request("DELETE", p); },
+    };
+
+    // ── Guard: require admin token ───────────────────────────────
+    if (!localStorage.getItem(ADMIN_TOKEN_KEY)) {
+      window.location.href = "/admin-login.html";
+    }
+
+    const adminUser = JSON.parse(localStorage.getItem(ADMIN_USER_KEY) || "{}");
+
+    // ── Session timer ────────────────────────────────────────────
+    let sessionExpiry = 0;
+    let sessionTimerInterval = null;
+
+    async function loadSession() {
+      const { ok, data } = await AdminAPI.get("/api/admin/session");
+      if (ok) {
+        document.getElementById("sessionEmail").textContent = data.email;
+        document.getElementById("sessionIp").textContent = `📍 ${data.ip}`;
+        sessionExpiry = Date.now() + (data.expires_in_seconds * 1000);
+        startSessionTimer();
+      }
+    }
+
+    function startSessionTimer() {
+      if (sessionTimerInterval) clearInterval(sessionTimerInterval);
+      sessionTimerInterval = setInterval(() => {
+        const remaining = Math.max(0, Math.ceil((sessionExpiry - Date.now()) / 1000));
+        const h = Math.floor(remaining / 3600);
+        const m = Math.floor((remaining % 3600) / 60);
+        const s = remaining % 60;
+        const label = h > 0 ? `${h}h ${m}m` : m > 0 ? `${m}m ${s}s` : `${s}s`;
+        const el = document.getElementById("sessionTimer");
+        el.textContent = `⏱ Session expires in ${label}`;
+        el.className = `session-timer ${remaining < 600 ? (remaining < 120 ? "crit" : "warn") : ""}`;
+        if (remaining <= 0) {
+          clearInterval(sessionTimerInterval);
+          Toast.warning("Admin session expired");
+          localStorage.removeItem(ADMIN_TOKEN_KEY);
+          setTimeout(() => window.location.href = "/admin-login.html", 1500);
+        }
+      }, 1000);
+    }
+
+    // ── Logout ────────────────────────────────────────────────────
+    async function adminLogout() {
+      await AdminAPI.post("/api/admin/logout", {});
+      localStorage.removeItem(ADMIN_TOKEN_KEY);
+      localStorage.removeItem(ADMIN_USER_KEY);
+      localStorage.removeItem(ADMIN_JTI_KEY);
+      Toast.info("Admin session ended");
+      setTimeout(() => window.location.href = "/admin-login.html", 600);
+    }
+
+    // ── Load all data ─────────────────────────────────────────────
+    async function loadAll() {
+      await loadSession();
+
+      // Stats
+      const { ok, data } = await AdminAPI.get("/api/admin/stats");
+      if (ok) {
+        document.getElementById("adminStats").innerHTML = `
+          <div class="stat-card"><div class="stat-value">${data.total_users}</div><div class="stat-label">Total Users</div></div>
+          <div class="stat-card"><div class="stat-value">${data.total_analyses}</div><div class="stat-label">Analyses Run</div></div>
+          <div class="stat-card"><div class="stat-value">${data.total_rooms}</div><div class="stat-label">Discussion Rooms</div></div>
+          <div class="stat-card"><div class="stat-value">${data.total_feedback}</div><div class="stat-label">Feedback Entries</div></div>`;
+      }
+
+      // Users
+      const ur = await AdminAPI.get("/api/admin/users");
+      const users = ur.data?.users || [];
+      document.getElementById("usersTable").innerHTML = `<table class="history-table">
+        <thead><tr><th>Username</th><th>Email</th><th>Role</th><th>Joined</th><th>Change Role</th></tr></thead>
+        <tbody>${users.map(u => `
+          <tr>
+            <td><strong>${escapeHtml(u.username)}</strong></td>
+            <td style="color:var(--text-muted)">${escapeHtml(u.email)}</td>
+            <td><span class="badge ${u.role === "admin" ? "badge-error" : "badge-info"}">${u.role}</span></td>
+            <td style="color:var(--text-muted)">${formatDate(u.created_at)}</td>
+            <td>
+              <select onchange="changeRole('${u.id}','${u.email}',this.value,this)"
+                style="padding:0.3rem;border:1px solid var(--border);background:var(--bg-card);border-radius:6px;font-size:0.8rem;color:var(--text-primary)">
+                <option ${u.role === "user" ? "selected" : ""} value="user">User</option>
+                <option ${u.role === "admin" ? "selected" : ""} value="admin">Admin</option>
+              </select>
+            </td>
+          </tr>`).join("")}
+        </tbody></table>`;
+
+      // Analyses
+      const ar = await AdminAPI.get("/api/admin/analyses");
+      const analyses = ar.data?.analyses || [];
+      document.getElementById("analysesTable").innerHTML = `<table class="history-table">
+        <thead><tr><th>User</th><th>Language</th><th>Grade</th><th>Errors</th><th>Date</th></tr></thead>
+        <tbody>${analyses.map(a => `
+          <tr>
+            <td>${escapeHtml(a.user)}</td>
+            <td style="font-family:var(--font-mono);font-size:0.8rem">${a.language.toUpperCase()}</td>
+            <td><span class="grade-badge grade-${a.grade}">${a.grade}</span></td>
+            <td>${a.syntax_errors}</td>
+            <td style="color:var(--text-muted)">${formatDate(a.created_at)}</td>
+          </tr>`).join("")}
+        </tbody></table>`;
+
+      // Rooms
+      const rr = await AdminAPI.get("/api/admin/rooms");
+      const rooms = rr.data?.rooms || [];
+      document.getElementById("roomsTable").innerHTML = `<table class="history-table">
+        <thead><tr><th>Room Name</th><th>Key</th><th>Created By</th><th>Created</th></tr></thead>
+        <tbody>${rooms.map(r => `
+          <tr>
+            <td><strong>${escapeHtml(r.name)}</strong></td>
+            <td><span style="font-family:var(--font-mono);font-size:0.78rem;background:var(--accent-light);padding:0.15rem 0.4rem;border-radius:4px">${r.key}</span></td>
+            <td>${escapeHtml(r.created_by)}</td>
+            <td style="color:var(--text-muted)">${formatDate(r.created_at)}</td>
+          </tr>`).join("")}
+        </tbody></table>`;
+
+      // Feedback
+      const fr = await AdminAPI.get("/api/admin/feedback");
+      const feedback = fr.data?.feedback || [];
+      document.getElementById("feedbackTable").innerHTML = `<table class="history-table">
+        <thead><tr><th>User</th><th>Rating</th><th>Feedback</th><th>Date</th></tr></thead>
+        <tbody>${feedback.map(f => `
+          <tr>
+            <td>${escapeHtml(f.user)}<br><span style="font-size:0.72rem;color:var(--text-muted)">${escapeHtml(f.email)}</span></td>
+            <td>${"⭐".repeat(f.rating)}</td>
+            <td style="font-size:0.8rem;max-width:300px">${escapeHtml(f.text)}</td>
+            <td style="color:var(--text-muted)">${formatDate(f.created_at)}</td>
+          </tr>`).join("")}
+        </tbody></table>`;
+
+      // Security summary
+      const sr = await AdminAPI.get("/api/admin/security-summary");
+      if (sr.ok) {
+        const sec = sr.data;
+        document.getElementById("secStats").innerHTML = `
+          <div class="sec-stat">
+            <div class="sec-stat-value ${sec.active_lockouts > 0 ? "" : ""}" style="color:${sec.active_lockouts > 0 ? "var(--error)" : "var(--success)"}">${sec.active_lockouts}</div>
+            <div class="sec-stat-label">Active Lockouts</div>
+          </div>
+          <div class="sec-stat">
+            <div class="sec-stat-value">${sec.revoked_admin_tokens}</div>
+            <div class="sec-stat-label">Revoked Admin Tokens</div>
+          </div>
+          <div class="sec-stat">
+            <div class="sec-stat-value" style="color:${sec.intrusion_attempts_in_memory > 0 ? "var(--warning)" : "var(--success)"}">${sec.intrusion_attempts_in_memory}</div>
+            <div class="sec-stat-label">Intrusion Attempts</div>
+          </div>
+          <div class="sec-stat">
+            <div class="sec-stat-value">${sec.admin_token_expiry_hours}h</div>
+            <div class="sec-stat-label">Token Expiry</div>
+          </div>`;
+
+        const intrusions = sec.recent_intrusions || [];
+        document.getElementById("intrusionList").innerHTML = !intrusions.length
+          ? `<div style="color:var(--success);font-size:0.875rem;padding:0.5rem">✅ No intrusion attempts detected</div>`
+          : intrusions.map(i => `
+            <div class="log-item log-intrusion">
+              <div>
+                <span class="lockout-badge">⚠ ${escapeHtml((i.action || "").split(":")[1] || "unknown")}</span>
+                <span class="log-action" style="margin-left:0.5rem">${escapeHtml(i.action || "")}</span>
+              </div>
+              <span style="color:var(--text-muted);font-size:0.72rem;white-space:nowrap">${formatRelative(i.timestamp)}</span>
+            </div>`).join("");
+      }
+
+      // Audit log
+      const al = await AdminAPI.get("/api/admin/audit");
+      const auditLog = al.data?.audit_log || [];
+      document.getElementById("auditList").innerHTML = !auditLog.length
+        ? `<div style="padding:1.5rem;color:var(--text-muted);text-align:center">No audit entries yet</div>`
+        : auditLog.map(l => `
+          <div class="log-item ${l.type === "intrusion" ? "log-intrusion" : ""}">
+            <div>
+              ${l.type === "intrusion" ? `<span class="lockout-badge">⚠ Intrusion</span> ` : ""}
+              <span style="font-weight:600;font-size:0.8rem">${escapeHtml(l.email || l.ip || "System")}</span>
+              <span class="log-action" style="margin-left:0.5rem">${escapeHtml(l.action || "")}</span>
+              ${l.ip ? `<span style="font-size:0.7rem;color:var(--text-muted);margin-left:0.5rem">📍 ${escapeHtml(l.ip)}</span>` : ""}
+            </div>
+            <span style="color:var(--text-muted);font-size:0.72rem;white-space:nowrap">${formatRelative(l.timestamp)}</span>
+          </div>`).join("");
+
+      // Activity DB logs
+      const dbLogs = await AdminAPI.get("/api/admin/logs");
+      // Append DB logs after audit list...
+    }
+
+    async function changeRole(userId, email, role, selectEl) {
+      if (role === "admin") {
+        const confirm = window.confirm(
+          `⚠️ Escalate ${email} to ADMIN?\n\nThis grants full platform access. Confirm?`
+        );
+        if (!confirm) { selectEl.value = "user"; return; }
+      }
+      const { ok, data } = await AdminAPI.put(`/api/admin/users/${userId}`, { role });
+      if (ok) Toast.success(`Role updated to ${role}`);
+      else { Toast.error(data.error || "Failed"); selectEl.value = role === "admin" ? "user" : "admin"; }
+    }
+
+    loadAll();
+    initTabs();
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Terms & Conditions – LintVertex</title>
+  <link rel="stylesheet" href="css/main.css"/>
+  <style>
+    /* ── Full-screen gate layout ── */
+    body {
+      min-height: 100vh;
+      background: var(--bg-primary);
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Thin accent top border */
+    .top-accent {
+      height: 3px;
+      background: linear-gradient(90deg, var(--accent), transparent 60%);
+    }
+
+    .tc-page {
+      flex: 1;
+      display: grid;
+      grid-template-columns: 1fr 480px;
+      max-width: 1200px;
+      margin: 0 auto;
+      width: 100%;
+      padding: 2.5rem 2rem;
+      gap: 2.5rem;
+      align-items: start;
+    }
+
+    /* ── Left: Document ── */
+    .tc-document-wrap {
+      position: sticky;
+      top: 2rem;
+    }
+
+    .tc-header {
+      margin-bottom: 1.5rem;
+    }
+
+    .tc-eyebrow {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--accent);
+      margin-bottom: 0.875rem;
+    }
+
+    .tc-eyebrow::before {
+      content: "";
+      display: inline-block;
+      width: 1.5rem;
+      height: 2px;
+      background: var(--accent);
+    }
+
+    .tc-title {
+      font-size: clamp(1.5rem, 3vw, 2.25rem);
+      font-weight: 800;
+      letter-spacing: -0.04em;
+      line-height: 1.1;
+      margin-bottom: 0.5rem;
+    }
+
+    .tc-meta {
+      display: flex;
+      gap: 1.25rem;
+      flex-wrap: wrap;
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      margin-bottom: 0.5rem;
+    }
+
+    .tc-meta span { display: flex; align-items: center; gap: 0.3rem; }
+
+    /* Change summary banner */
+    .tc-changes-banner {
+      display: none;
+      padding: 0.875rem 1.1rem;
+      background: rgba(230,126,34,0.08);
+      border: 1px solid rgba(230,126,34,0.25);
+      border-radius: var(--radius-md);
+      font-size: 0.82rem;
+      color: #c07820;
+      margin-bottom: 1.25rem;
+      gap: 0.75rem;
+    }
+
+    .tc-changes-banner.show {
+      display: flex;
+      align-items: flex-start;
+    }
+
+    /* Scrollable document body */
+    .tc-scroll-box {
+      height: 58vh;
+      overflow-y: auto;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 2rem 2.5rem;
+      position: relative;
+    }
+
+    /* scroll progress bar at top of box */
+    .scroll-progress {
+      position: sticky;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: var(--border);
+      margin: -2rem -2.5rem 1.5rem;
+      z-index: 10;
+    }
+
+    .scroll-bar {
+      height: 100%;
+      background: var(--accent);
+      width: 0%;
+      transition: width 0.1s linear;
+    }
+
+    /* T&C content styles */
+    .tc-content h2 {
+      font-size: 1rem;
+      font-weight: 800;
+      margin: 1.5rem 0 0.5rem;
+      color: var(--text-primary);
+      letter-spacing: -0.01em;
+      padding-bottom: 0.375rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .tc-content h2:first-child { margin-top: 0; }
+
+    .tc-content p {
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+      line-height: 1.75;
+      margin-bottom: 0.875rem;
+    }
+
+    .tc-content ul {
+      padding-left: 1.5rem;
+      margin-bottom: 0.875rem;
+    }
+
+    .tc-content ul li {
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+      line-height: 1.65;
+      margin-bottom: 0.3rem;
+    }
+
+    /* Must-read indicator */
+    .must-read-notice {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.625rem 1rem;
+      background: var(--bg-secondary);
+      border-top: 1px solid var(--border);
+      border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      transition: all 0.3s ease;
+    }
+
+    .must-read-notice.done { color: var(--success); }
+
+    .progress-dots {
+      display: flex;
+      gap: 3px;
+      margin-left: auto;
+    }
+
+    .progress-dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--border);
+      transition: background 0.3s ease;
+    }
+
+    .progress-dot.lit { background: var(--accent); }
+
+    /* ── Right: Acceptance Panel ── */
+    .tc-panel {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xl);
+      padding: 2rem;
+      position: sticky;
+      top: 2rem;
+      box-shadow: var(--shadow-md);
+    }
+
+    .tc-panel::before {
+      content: "";
+      position: absolute;
+      top: 0; left: 2rem; right: 2rem;
+      height: 2px;
+      background: linear-gradient(90deg, var(--accent), transparent);
+      border-radius: 0 0 2px 2px;
+    }
+
+    .panel-title {
+      font-size: 1.05rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      margin-bottom: 0.375rem;
+    }
+
+    .panel-sub {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-bottom: 1.5rem;
+      line-height: 1.5;
+    }
+
+    /* Checklist */
+    .checkbox-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.75rem;
+      padding: 0.875rem;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      margin-bottom: 0.625rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      user-select: none;
+    }
+
+    .checkbox-item:hover { border-color: var(--accent); }
+    .checkbox-item.checked { border-color: var(--accent); background: var(--accent-light); }
+
+    .custom-check {
+      width: 20px; height: 20px;
+      border: 2px solid var(--border);
+      border-radius: 5px;
+      flex-shrink: 0;
+      margin-top: 1px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+      font-size: 0.7rem;
+      color: transparent;
+    }
+
+    .checkbox-item.checked .custom-check {
+      border-color: var(--accent);
+      background: var(--accent);
+      color: var(--bg-primary);
+    }
+
+    .checkbox-label {
+      font-size: 0.82rem;
+      color: var(--text-secondary);
+      line-height: 1.5;
+    }
+
+    .checkbox-item.checked .checkbox-label { color: var(--text-primary); }
+
+    /* Accept button */
+    .accept-btn {
+      width: 100%;
+      padding: 0.875rem;
+      border-radius: var(--radius-md);
+      font-size: 0.95rem;
+      font-weight: 700;
+      margin-top: 1rem;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-family: var(--font-ui);
+      background: var(--border);
+      color: var(--text-muted);
+    }
+
+    .accept-btn.ready {
+      background: var(--accent);
+      color: var(--bg-primary);
+    }
+
+    .accept-btn.ready:hover {
+      transform: translateY(-1px);
+      box-shadow: var(--shadow-accent);
+    }
+
+    /* Decline link */
+    .decline-link {
+      display: block;
+      text-align: center;
+      margin-top: 0.875rem;
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    .decline-link:hover { color: var(--error); }
+
+    /* Security badges */
+    .trust-badges {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      margin-top: 1.5rem;
+      padding-top: 1.25rem;
+      border-top: 1px solid var(--border);
+    }
+
+    .trust-badge {
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+      font-size: 0.68rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      padding: 0.2rem 0.6rem;
+      border: 1px solid var(--border);
+      border-radius: 100px;
+    }
+
+    /* Decline modal */
+    .decline-modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      backdrop-filter: blur(6px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 999;
+    }
+
+    .decline-modal.open { display: flex; }
+
+    .decline-box {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 2.5rem;
+      max-width: 400px;
+      width: 90%;
+      text-align: center;
+      box-shadow: var(--shadow-lg);
+      animation: slideUp 0.25s ease;
+    }
+
+    .decline-icon { font-size: 3rem; margin-bottom: 1rem; }
+
+    /* Loading overlay */
+    .accepting-overlay {
+      position: fixed;
+      inset: 0;
+      background: var(--bg-primary);
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 2000;
+      gap: 1.5rem;
+    }
+
+    .accepting-overlay.show { display: flex; }
+
+    .check-anim {
+      width: 72px; height: 72px;
+      border-radius: 50%;
+      background: var(--accent);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2rem;
+      animation: popIn 0.5s cubic-bezier(0.175,0.885,0.32,1.275);
+    }
+
+    @keyframes popIn { 0%{transform:scale(0);opacity:0} 100%{transform:scale(1);opacity:1} }
+
+    @media(max-width:900px) {
+      .tc-page { grid-template-columns:1fr; }
+      .tc-document-wrap, .tc-panel { position:static; }
+      .tc-scroll-box { height: 45vh; }
+    }
+  </style>
+</head>
+<body>
+  <div class="top-accent"></div>
+
+  <!-- Theme toggle -->
+  <div style="position:fixed;top:1rem;right:1.5rem;z-index:100;display:flex;align-items:center;gap:0.5rem">
+    <span class="theme-label">☀️</span>
+    <button class="toggle-track"><div class="toggle-thumb"></div></button>
+  </div>
+
+  <div class="tc-page">
+
+    <!-- ── Left: Document ── -->
+    <div class="tc-document-wrap">
+      <div class="tc-header">
+        <div class="tc-eyebrow">📋 Legal Document</div>
+        <h1 class="tc-title" id="tcTitle">Terms and Conditions</h1>
+        <div class="tc-meta">
+          <span>📌 Version <strong id="tcVersion">—</strong></span>
+          <span>📅 Effective <strong id="tcEffective">—</strong></span>
+        </div>
+      </div>
+
+      <!-- Change summary (shown when it's an update, not first time) -->
+      <div class="tc-changes-banner" id="changesBanner">
+        <span style="font-size:1.1rem;flex-shrink:0">🔄</span>
+        <div>
+          <strong>What changed in this version:</strong>
+          <div id="changesSummary" style="margin-top:0.25rem"></div>
+        </div>
+      </div>
+
+      <!-- Scrollable T&C document -->
+      <div class="tc-scroll-box" id="tcScrollBox">
+        <div class="scroll-progress">
+          <div class="scroll-bar" id="scrollBar"></div>
+        </div>
+        <div class="tc-content" id="tcContent">
+          <div class="skeleton" style="height:20px;margin-bottom:12px;border-radius:4px"></div>
+          <div class="skeleton" style="height:14px;margin-bottom:8px;border-radius:4px"></div>
+          <div class="skeleton" style="height:14px;margin-bottom:8px;width:85%;border-radius:4px"></div>
+          <div class="skeleton" style="height:14px;margin-bottom:24px;width:70%;border-radius:4px"></div>
+          <div class="skeleton" style="height:20px;margin-bottom:12px;border-radius:4px"></div>
+          <div class="skeleton" style="height:14px;margin-bottom:8px;border-radius:4px"></div>
+        </div>
+      </div>
+
+      <div class="must-read-notice" id="mustReadNotice">
+        <span id="readIcon">📖</span>
+        <span id="readStatus">Please scroll and read the full document</span>
+        <div class="progress-dots" id="progressDots">
+          <div class="progress-dot" id="dot1"></div>
+          <div class="progress-dot" id="dot2"></div>
+          <div class="progress-dot" id="dot3"></div>
+          <div class="progress-dot" id="dot4"></div>
+          <div class="progress-dot" id="dot5"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Right: Acceptance Panel ── -->
+    <div class="tc-panel">
+      <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:1rem">
+        <div style="width:40px;height:40px;border-radius:10px;background:var(--accent-light);border:1px solid var(--glass-border);display:flex;align-items:center;justify-content:center;font-size:1.25rem">📝</div>
+        <div>
+          <div class="panel-title">Review & Accept</div>
+        </div>
+      </div>
+
+      <p class="panel-sub" id="panelSub">
+        To use LintVertex, please read the full Terms and Conditions on the left, then confirm your agreement below.
+      </p>
+
+      <!-- Checkboxes -->
+      <div id="checkboxList">
+        <div class="checkbox-item" id="chk1" onclick="toggleCheck('chk1')">
+          <div class="custom-check" id="chk1mark">✓</div>
+          <div class="checkbox-label">
+            I have read and understood the full Terms and Conditions
+          </div>
+        </div>
+        <div class="checkbox-item" id="chk2" onclick="toggleCheck('chk2')">
+          <div class="custom-check" id="chk2mark">✓</div>
+          <div class="checkbox-label">
+            I agree to LintVertex's data handling and code privacy policies
+          </div>
+        </div>
+        <div class="checkbox-item" id="chk3" onclick="toggleCheck('chk3')">
+          <div class="custom-check" id="chk3mark">✓</div>
+          <div class="checkbox-label">
+            I am at least 13 years old and authorized to accept these terms
+          </div>
+        </div>
+      </div>
+
+      <button class="accept-btn" id="acceptBtn" onclick="acceptTerms()" disabled>
+        Scroll to read before accepting
+      </button>
+
+      <a class="decline-link" onclick="openDecline()">I do not accept — sign out</a>
+
+      <div class="trust-badges">
+        <div class="trust-badge">🔒 Secure</div>
+        <div class="trust-badge">🛡️ GDPR aware</div>
+        <div class="trust-badge">📋 Versioned</div>
+        <div class="trust-badge">⏱ 5 min read</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Decline Modal -->
+  <div class="decline-modal" id="declineModal">
+    <div class="decline-box">
+      <div class="decline-icon">⚠️</div>
+      <h3 style="font-size:1.1rem;font-weight:800;margin-bottom:0.5rem">Are you sure?</h3>
+      <p style="font-size:0.875rem;color:var(--text-secondary);margin-bottom:1.5rem">
+        You must accept the Terms and Conditions to use LintVertex.
+        Declining will sign you out.
+      </p>
+      <div style="display:flex;gap:0.75rem">
+        <button class="btn btn-ghost" style="flex:1" onclick="closeDecline()">← Go Back</button>
+        <a href="/login.html" class="btn btn-danger" style="flex:1;justify-content:center" onclick="Auth.clearSession()">Sign Out</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Accepting Overlay -->
+  <div class="accepting-overlay" id="acceptingOverlay">
+    <div class="check-anim">✓</div>
+    <div style="text-align:center">
+      <div style="font-size:1.25rem;font-weight:800;margin-bottom:0.375rem">Terms Accepted!</div>
+      <div style="font-size:0.875rem;color:var(--text-muted)">Taking you to your dashboard...</div>
+    </div>
+  </div>
+
+  <script src="js/app.js"></script>
+  <script>
+    Auth.requireAuth();
+
+    let termsId       = null;
+    let hasScrolled   = false;
+    let checks        = { chk1: false, chk2: false, chk3: false };
+    const SCROLL_PCTS = [20, 40, 60, 80, 100];
+
+    // ── Load T&C ─────────────────────────────────────────────────
+    async function loadTerms() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const isPreview = urlParams.get("preview") === "1";
+
+      let data;
+      if (isPreview) {
+        const raw = localStorage.getItem("lv_terms_preview");
+        if (!raw) {
+          document.getElementById("tcContent").innerHTML = `<p style="color:var(--error)">No preview data found.</p>`;
+          return;
+        }
+        data = JSON.parse(raw);
+        console.log("Preview mode active", data);
+      } else {
+        const res = await API.get("/api/terms/current");
+        if (!res.ok) {
+          document.getElementById("tcContent").innerHTML = `<p style="color:var(--error)">Failed to load Terms. Please refresh.</p>`;
+          return;
+        }
+        data = res.data;
+      }
+
+      termsId = data.id || "preview";
+      document.getElementById("tcTitle").textContent     = data.title;
+      document.getElementById("tcVersion").textContent   = data.version;
+      document.getElementById("tcEffective").textContent =
+        new Intl.DateTimeFormat("en-US", { year:"numeric", month:"long", day:"numeric" })
+          .format(new Date(data.effective_at));
+      document.getElementById("tcContent").innerHTML = data.content;
+      document.title = (isPreview ? "[PREVIEW] " : "") + `${data.title} – LintVertex`;
+
+      // Show summary if update (not first login)
+      if (data.summary) {
+        document.getElementById("changesBanner").classList.add("show");
+        document.getElementById("changesSummary").textContent = data.summary;
+        document.getElementById("panelSub").textContent =
+          `The Terms and Conditions have been updated (v${data.version}). Please review the changes and confirm your agreement to continue.`;
+      }
+    }
+
+    // ── Scroll tracking ───────────────────────────────────────────
+    document.getElementById("tcScrollBox").addEventListener("scroll", function() {
+      const el       = this;
+      const scrolled = el.scrollTop;
+      const total    = el.scrollHeight - el.clientHeight;
+      const pct      = total > 0 ? Math.round((scrolled / total) * 100) : 100;
+
+      // Scroll bar
+      document.getElementById("scrollBar").style.width = `${Math.min(pct, 100)}%`;
+
+      // Dots
+      SCROLL_PCTS.forEach((threshold, i) => {
+        document.getElementById(`dot${i+1}`).classList.toggle("lit", pct >= threshold);
+      });
+
+      // Unlock when 90%+ read
+      if (pct >= 90 && !hasScrolled) {
+        hasScrolled = true;
+        const notice = document.getElementById("mustReadNotice");
+        const status = document.getElementById("readStatus");
+        notice.classList.add("done");
+        document.getElementById("readIcon").textContent = "✅";
+        status.textContent = "Document fully read — please confirm below";
+        updateAcceptBtn();
+      }
+    });
+
+    // ── Checkboxes ────────────────────────────────────────────────
+    function toggleCheck(id) {
+      checks[id] = !checks[id];
+      const item = document.getElementById(id);
+      item.classList.toggle("checked", checks[id]);
+      updateAcceptBtn();
+    }
+
+    function updateAcceptBtn() {
+      const btn       = document.getElementById("acceptBtn");
+      const allChecked = Object.values(checks).every(Boolean);
+      const canAccept  = hasScrolled && allChecked;
+      btn.disabled    = !canAccept;
+      btn.classList.toggle("ready", canAccept);
+      btn.textContent = !hasScrolled
+        ? "Scroll to read before accepting"
+        : !allChecked
+        ? "Please check all boxes above"
+        : "✓ I Accept – Continue to LintVertex";
+    }
+
+    // ── Accept ────────────────────────────────────────────────────
+    async function acceptTerms() {
+      if (!termsId) return;
+      const btn = document.getElementById("acceptBtn");
+      btn.disabled = true;
+      btn.innerHTML = '<div class="spinner" style="display:inline-block;margin-right:0.5rem"></div> Saving...';
+
+      const { ok, data } = await API.post("/api/terms/accept", {
+        terms_id: termsId,
+        accepted: true,
+      });
+
+      if (ok) {
+        document.getElementById("acceptingOverlay").classList.add("show");
+        setTimeout(() => window.location.href = "/dashboard.html", 1800);
+      } else {
+        btn.disabled = false;
+        btn.className = "accept-btn ready";
+        btn.textContent = "✓ I Accept – Continue to LintVertex";
+        Toast.error(data.error || "Failed to record acceptance. Try again.");
+      }
+    }
+
+    // ── Decline modal ─────────────────────────────────────────────
+    function openDecline()  { document.getElementById("declineModal").classList.add("open"); }
+    function closeDecline() { document.getElementById("declineModal").classList.remove("open"); }
+    document.getElementById("declineModal").addEventListener("click", e => {
+      if (e.target === document.getElementById("declineModal")) closeDecline();
+    });
+
+    // ── Init ──────────────────────────────────────────────────────
+    loadTerms().then(() => {
+      // Auto-trigger if very short document
+      const box = document.getElementById("tcScrollBox");
+      if (box.scrollHeight <= box.clientHeight + 50) {
+        hasScrolled = true;
+        document.getElementById("mustReadNotice").classList.add("done");
+        document.getElementById("readIcon").textContent = "✅";
+        document.getElementById("readStatus").textContent = "Document fully read — please confirm below";
+        SCROLL_PCTS.forEach((_,i) => document.getElementById(`dot${i+1}`).classList.add("lit"));
+        document.getElementById("scrollBar").style.width = "100%";
+        updateAcceptBtn();
+      }
+    });
+  </script>
+</body>
+</html>

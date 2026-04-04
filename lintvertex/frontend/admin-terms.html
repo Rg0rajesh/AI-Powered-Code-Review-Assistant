@@ -1,0 +1,1380 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <title>Terms Manager – LintVertex Admin</title>
+  <link rel="stylesheet" href="css/main.css" />
+  <style>
+    /* ── Layout ── */
+    .tm-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    /* ── Status bar ── */
+    .tc-status-bar {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+      padding: 0.875rem 1.25rem;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--success);
+      border-radius: var(--radius-md);
+    }
+
+    .tc-status-bar.no-terms {
+      border-left-color: var(--warning);
+    }
+
+    .tc-version-pill {
+      font-family: var(--font-mono);
+      font-size: 0.78rem;
+      font-weight: 700;
+      padding: 0.25rem 0.75rem;
+      border-radius: 100px;
+      background: rgba(39, 174, 96, 0.12);
+      color: var(--success);
+      border: 1px solid rgba(39, 174, 96, 0.25);
+    }
+
+    .tc-stat-chip {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+    }
+
+    .tc-stat-chip strong {
+      color: var(--text-primary);
+    }
+
+    /* ── Editor layout ── */
+    .editor-layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+    }
+
+    @media(max-width:1000px) {
+      .editor-layout {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* ── Toolbar ── */
+    .editor-toolbar {
+      display: flex;
+      gap: 0.25rem;
+      flex-wrap: wrap;
+      padding: 0.625rem 0.875rem;
+      background: var(--bg-secondary);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .tb-btn {
+      padding: 0.3rem 0.625rem;
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      background: var(--bg-card);
+      color: var(--text-secondary);
+      cursor: pointer;
+      font-size: 0.75rem;
+      font-weight: 600;
+      font-family: var(--font-ui);
+      transition: all 0.15s;
+      white-space: nowrap;
+    }
+
+    .tb-btn:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+      background: var(--accent-light);
+    }
+
+    .tb-sep {
+      width: 1px;
+      background: var(--border);
+      margin: 0 0.2rem;
+      align-self: stretch;
+    }
+
+    /* ── Rich editor ── */
+    .editor-pane {
+      background: var(--bg-card);
+      display: flex;
+      flex-direction: column;
+      border-right: 1px solid var(--border);
+    }
+
+    @media(max-width:1000px) {
+      .editor-pane {
+        border-right: none;
+        border-bottom: 1px solid var(--border);
+      }
+    }
+
+    .editor-pane-header {
+      padding: 0.625rem 1rem;
+      background: var(--bg-secondary);
+      border-bottom: 1px solid var(--border);
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .rich-editor {
+      flex: 1;
+      min-height: 480px;
+      max-height: 60vh;
+      overflow-y: auto;
+      padding: 1.5rem 2rem;
+      outline: none;
+      font-size: 0.875rem;
+      line-height: 1.75;
+      color: var(--text-primary);
+      caret-color: var(--accent);
+    }
+
+    .rich-editor h2 {
+      font-size: 1rem;
+      font-weight: 800;
+      letter-spacing: -0.01em;
+      margin: 1.5rem 0 0.5rem;
+      padding-bottom: 0.375rem;
+      border-bottom: 1px solid var(--border);
+      color: var(--text-primary);
+    }
+
+    .rich-editor h2:first-child {
+      margin-top: 0;
+    }
+
+    .rich-editor p {
+      margin-bottom: 0.875rem;
+      color: var(--text-secondary);
+    }
+
+    .rich-editor ul,
+    .rich-editor ol {
+      padding-left: 1.5rem;
+      margin-bottom: 0.875rem;
+    }
+
+    .rich-editor li {
+      color: var(--text-secondary);
+      margin-bottom: 0.3rem;
+      line-height: 1.65;
+    }
+
+    .rich-editor strong {
+      color: var(--text-primary);
+    }
+
+    .rich-editor a {
+      color: var(--accent);
+    }
+
+    .editor-footer {
+      padding: 0.625rem 1rem;
+      background: var(--bg-secondary);
+      border-top: 1px solid var(--border);
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    /* ── Preview pane ── */
+    .preview-pane {
+      background: #FAFAFA;
+      display: flex;
+      flex-direction: column;
+    }
+
+    [data-theme="dark"] .preview-pane {
+      background: #111;
+    }
+
+    .preview-pane-header {
+      padding: 0.625rem 1rem;
+      background: var(--bg-secondary);
+      border-bottom: 1px solid var(--border);
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .preview-body {
+      flex: 1;
+      min-height: 480px;
+      max-height: 60vh;
+      overflow-y: auto;
+      padding: 1.5rem 2rem;
+      font-family: 'Segoe UI', sans-serif;
+      font-size: 0.875rem;
+      line-height: 1.75;
+      color: #333;
+    }
+
+    [data-theme="dark"] .preview-body {
+      color: #ccc;
+    }
+
+    .preview-body h2 {
+      font-size: 0.95rem;
+      font-weight: 800;
+      margin: 1.5rem 0 0.5rem;
+      padding-bottom: 0.375rem;
+      border-bottom: 1px solid #e8e8e8;
+      color: #1a1a1a;
+    }
+
+    [data-theme="dark"] .preview-body h2 {
+      color: #eee;
+      border-bottom-color: #333;
+    }
+
+    .preview-body h2:first-child {
+      margin-top: 0;
+    }
+
+    .preview-body p {
+      margin-bottom: 0.875rem;
+      color: #555;
+    }
+
+    [data-theme="dark"] .preview-body p {
+      color: #aaa;
+    }
+
+    .preview-body ul {
+      padding-left: 1.5rem;
+      margin-bottom: 0.875rem;
+    }
+
+    .preview-body li {
+      color: #555;
+      margin-bottom: 0.3rem;
+    }
+
+    [data-theme="dark"] .preview-body li {
+      color: #aaa;
+    }
+
+    /* ── Publish panel ── */
+    .publish-panel {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+    }
+
+    .publish-header {
+      padding: 1rem 1.25rem;
+      background: var(--bg-secondary);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .publish-header h3 {
+      font-size: 0.95rem;
+      font-weight: 700;
+      margin: 0;
+    }
+
+    .publish-body {
+      padding: 1.25rem;
+    }
+
+    .publish-fields {
+      display: grid;
+      grid-template-columns: 140px 1fr 1fr;
+      gap: 0.875rem;
+      margin-bottom: 0.875rem;
+    }
+
+    @media(max-width:800px) {
+      .publish-fields {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    .publish-actions {
+      display: flex;
+      gap: 0.75rem;
+      align-items: center;
+      flex-wrap: wrap;
+      padding-top: 1rem;
+      border-top: 1px solid var(--border);
+      margin-top: 0.5rem;
+    }
+
+    .notify-check {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.82rem;
+      color: var(--text-secondary);
+      cursor: pointer;
+      margin-left: auto;
+    }
+
+    .notify-check input {
+      width: 16px;
+      height: 16px;
+      accent-color: var(--accent);
+    }
+
+    /* ── Version history ── */
+    .version-row {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 0.875rem 1.1rem;
+      border-bottom: 1px solid var(--border);
+      transition: background 0.15s;
+    }
+
+    .version-row:last-child {
+      border-bottom: none;
+    }
+
+    .version-row:hover {
+      background: var(--accent-light);
+    }
+
+    .ver-badge {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 0.2rem 0.6rem;
+      border-radius: 100px;
+      flex-shrink: 0;
+      background: var(--bg-secondary);
+      color: var(--text-muted);
+      border: 1px solid var(--border);
+    }
+
+    .ver-badge.current {
+      background: rgba(39, 174, 96, 0.1);
+      color: var(--success);
+      border-color: rgba(39, 174, 96, 0.3);
+    }
+
+    .ver-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .ver-title {
+      font-size: 0.875rem;
+      font-weight: 600;
+      margin-bottom: 0.15rem;
+    }
+
+    .ver-meta {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+    }
+
+    .ver-stats {
+      text-align: right;
+      flex-shrink: 0;
+    }
+
+    .ver-accepted {
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--success);
+    }
+
+    .ver-pending {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+    }
+
+    .ver-actions {
+      display: flex;
+      gap: 0.375rem;
+      flex-shrink: 0;
+    }
+
+    /* ── Acceptance stats ── */
+    .accept-stat-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .progress-bar-wrap {
+      background: var(--border);
+      border-radius: 6px;
+      overflow: hidden;
+      height: 10px;
+      margin-top: 0.375rem;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      background: var(--accent);
+      border-radius: 6px;
+      transition: width 1s cubic-bezier(.4, 0, .2, 1);
+    }
+
+    .accept-user-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.625rem 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.8rem;
+    }
+
+    .accept-user-row:last-child {
+      border-bottom: none;
+    }
+
+    /* ── Confirm modal ── */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.55);
+      backdrop-filter: blur(6px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 2000;
+    }
+
+    .modal-overlay.open {
+      display: flex;
+    }
+
+    .modal-box {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 2rem;
+      max-width: 480px;
+      width: 90%;
+      box-shadow: var(--shadow-lg);
+      animation: slideUp 0.22s ease;
+    }
+
+    .modal-box h3 {
+      font-size: 1.1rem;
+      font-weight: 800;
+      margin-bottom: 0.5rem;
+    }
+
+    /* ── Publish result banner ── */
+    .pub-result {
+      display: none;
+      padding: 0.875rem 1.1rem;
+      border-radius: var(--radius-md);
+      font-size: 0.875rem;
+      margin-top: 0.875rem;
+    }
+
+    .pub-result.ok {
+      background: rgba(39, 174, 96, 0.1);
+      border: 1px solid var(--success);
+      color: var(--success);
+    }
+
+    .pub-result.err {
+      background: rgba(192, 57, 43, 0.1);
+      border: 1px solid var(--error);
+      color: var(--error);
+    }
+
+    /* ── Unsaved indicator ── */
+    .unsaved-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--warning);
+      display: none;
+      flex-shrink: 0;
+    }
+
+    .unsaved-dot.show {
+      display: block;
+    }
+
+    /* ── Inline edit mode ── */
+    .edit-mode-banner {
+      display: none;
+      padding: 0.5rem 1rem;
+      background: rgba(230, 126, 34, 0.08);
+      border: 1px solid rgba(230, 126, 34, 0.2);
+      border-radius: var(--radius-sm);
+      font-size: 0.78rem;
+      color: var(--warning);
+      align-items: center;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    .edit-mode-banner.show {
+      display: flex;
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- ══ NAVBAR ══ -->
+  <nav class="navbar">
+    <a href="/index.html" class="logo-text">Lint<span>Vertex</span></a>
+    <ul class="nav-links">
+      <li><a href="/dashboard.html">Dashboard</a></li>
+      <li><a href="/analyze.html">Analyze</a></li>
+      <li><a href="/rooms.html">Rooms</a></li>
+    </ul>
+    <div style="display:flex;align-items:center;gap:0.75rem">
+      <div class="theme-toggle">
+        <span class="theme-label">☀️</span>
+        <button class="toggle-track">
+          <div class="toggle-thumb"></div>
+        </button>
+      </div>
+
+      <a href="/notifications.html" class="notif-bell" data-notif-count="0" title="Notifications">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+          <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+        </svg>
+        <span class="notif-badge" style="display:none">0</span>
+      </a>
+
+      <button class="btn btn-danger btn-sm" onclick="adminLogout()">🔒 End Session</button>
+    </div>
+  </nav>
+
+  <div class="layout">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:1.5rem;padding:0 0.25rem">
+        <div id="sidebarAvatar"
+          style="width:36px;height:36px;border-radius:50%;background:var(--accent-light);border:2px solid var(--accent);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.8rem;overflow:hidden;flex-shrink:0">
+        </div>
+        <div>
+          <div style="font-weight:700;font-size:0.875rem" data-user-name></div>
+          <div style="font-size:0.7rem;color:var(--text-muted)" id="sidebarRole"></div>
+        </div>
+      </div>
+
+      <ul class="sidebar-nav">
+        <li><a href="/dashboard.html">
+            <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="3" width="7" height="7" />
+              <rect x="14" y="3" width="7" height="7" />
+              <rect x="3" y="14" width="7" height="7" />
+              <rect x="14" y="14" width="7" height="7" />
+            </svg>
+            Dashboard
+          </a></li>
+        <li><a href="/admin.html">
+            <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+            </svg>
+            Admin Panel
+          </a></li>
+        <li><a href="/admin-email.html">
+            <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+              <polyline points="22,6 12,13 2,6" />
+            </svg>
+            Email Center
+          </a></li>
+        <li><a href="/admin-terms.html" class="active">
+            <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+              <polyline points="14 2 14 8 20 8" />
+              <line x1="16" y1="13" x2="8" y2="13" />
+              <line x1="16" y1="17" x2="8" y2="17" />
+            </svg>
+            Terms Manager
+          </a></li>
+        <li><a href="/admin-notifications.html">
+            <svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+              <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+            </svg>
+            Admin Notifications
+          </a></li>
+      </ul>
+    </aside>
+
+    <!-- ══ MAIN ══ -->
+    <main class="main-content">
+      <div class="page-title">📋 Terms & Conditions Manager</div>
+      <p class="page-subtitle">Update, publish, and track user acceptance of platform terms</p>
+
+      <div class="tm-wrap">
+
+        <!-- ── Current version status bar ── -->
+        <div class="tc-status-bar" id="statusBar">
+          <div class="spinner"></div>
+        </div>
+
+        <!-- ── Tabs ── -->
+        <div class="tabs">
+          <button class="tab-btn active" data-tab="update">✍️ Update Terms</button>
+          <button class="tab-btn" data-tab="versions">📚 Version History</button>
+          <button class="tab-btn" data-tab="acceptance">📊 Acceptance</button>
+        </div>
+
+        <!-- ════════════════════════════════════════
+           TAB 1 — UPDATE TERMS
+      ════════════════════════════════════════ -->
+        <div class="tab-panel active" id="tab-update">
+
+          <!-- Edit mode warning -->
+          <div class="edit-mode-banner" id="editModeBanner">
+            <span>✏️</span>
+            <span>You are editing the <strong id="editingVersionLabel">current</strong> terms content directly.
+              Publish as a new version when done to push changes to all users.</span>
+          </div>
+
+          <!-- Split editor / preview -->
+          <div class="editor-layout" style="margin-bottom:1.25rem">
+
+            <!-- Left: Editor -->
+            <div class="editor-pane">
+              <div class="editor-pane-header">
+                <span>✍️ Content Editor</span>
+                <div style="display:flex;align-items:center;gap:0.5rem">
+                  <div class="unsaved-dot" id="unsavedDot" title="Unsaved changes"></div>
+                  <span id="unsavedLabel" style="font-size:0.68rem;color:var(--warning);display:none">Unsaved</span>
+                </div>
+              </div>
+
+              <!-- Toolbar -->
+              <div class="editor-toolbar">
+                <button class="tb-btn" onclick="fmt('bold')"><strong>B</strong></button>
+                <button class="tb-btn" onclick="fmt('italic')"><em>I</em></button>
+                <button class="tb-btn" onclick="fmt('underline')"><u>U</u></button>
+                <div class="tb-sep"></div>
+                <button class="tb-btn" onclick="insertH2()">H2</button>
+                <button class="tb-btn" onclick="fmt('insertUnorderedList')">• List</button>
+                <button class="tb-btn" onclick="fmt('insertOrderedList')">1. List</button>
+                <div class="tb-sep"></div>
+                <button class="tb-btn" onclick="insertSection()">+ Section</button>
+                <button class="tb-btn" onclick="clearFormat()">Clear</button>
+                <div class="tb-sep"></div>
+                <button class="tb-btn" onclick="loadCurrent()" title="Reload from saved">↩ Reload</button>
+              </div>
+
+              <div class="rich-editor" id="richEditor" contenteditable="true" spellcheck="true"
+                oninput="onEditorInput()">
+                <p style="color:var(--text-muted)">Loading current terms...</p>
+              </div>
+
+              <div class="editor-footer">
+                <span id="charCount">0 characters · 0 words</span>
+                <span id="sectionCount" style="color:var(--text-muted)">0 sections</span>
+              </div>
+            </div>
+
+            <!-- Right: Preview -->
+            <div class="preview-pane">
+              <div class="preview-pane-header">
+                <span style="width:8px;height:8px;border-radius:50%;background:var(--success);flex-shrink:0"></span>
+                Live Preview — as users will see it
+              </div>
+              <div class="preview-body" id="previewBody">
+                <p style="color:#aaa;text-align:center;padding:2rem">Start editing to see preview...</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- ── Publish panel ── -->
+          <div class="publish-panel">
+            <div class="publish-header">
+              <div
+                style="width:36px;height:36px;border-radius:8px;background:var(--accent-light);border:1px solid var(--glass-border);display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0">
+                🚀</div>
+              <div>
+                <h3>Publish Updated Terms</h3>
+                <div style="font-size:0.75rem;color:var(--text-muted);margin-top:0.1rem">All users will be required to
+                  re-accept on their next login</div>
+              </div>
+            </div>
+            <div class="publish-body">
+              <div class="publish-fields">
+                <div class="form-group" style="margin:0">
+                  <label class="form-label">New Version #</label>
+                  <input type="text" class="form-input" id="newVersion" placeholder="e.g. 1.2"
+                    title="Use format: 1.0 / 1.1 / 2.0" />
+                </div>
+                <div class="form-group" style="margin:0">
+                  <label class="form-label">Document Title</label>
+                  <input type="text" class="form-input" id="newTitle" value="LintVertex Terms and Conditions" />
+                </div>
+                <div class="form-group" style="margin:0">
+                  <label class="form-label">Effective Date</label>
+                  <input type="date" class="form-input" id="newEffectiveDate" />
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">
+                  What Changed?
+                  <span style="font-weight:400;color:var(--text-muted)"> — shown to users as a change summary</span>
+                </label>
+                <input type="text" class="form-input" id="newSummary"
+                  placeholder="e.g. Updated data handling in Section 4, added AI disclosure clause in Section 7" />
+              </div>
+
+              <div class="publish-actions">
+                <button class="btn btn-primary" id="publishBtn" onclick="openConfirmModal()">
+                  🚀 Publish New Version
+                </button>
+                <button class="btn btn-secondary" onclick="openPreviewPage()">
+                  👁 Preview as User
+                </button>
+                <label class="notify-check">
+                  <input type="checkbox" id="notifyUsers" checked />
+                  <span>Send email notification to all users</span>
+                </label>
+              </div>
+
+              <div class="pub-result" id="pubResult"></div>
+            </div>
+          </div>
+
+        </div><!-- /tab-update -->
+
+
+        <!-- ════════════════════════════════════════
+           TAB 2 — VERSION HISTORY
+      ════════════════════════════════════════ -->
+        <div class="tab-panel" id="tab-versions">
+          <div class="card" style="padding:0;overflow:hidden">
+            <div
+              style="padding:1rem 1.25rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between">
+              <div>
+                <div style="font-weight:700;font-size:0.9rem">All Published Versions</div>
+                <div style="font-size:0.75rem;color:var(--text-muted);margin-top:0.1rem">Click any version to load it
+                  into the editor, or roll back to make it active</div>
+              </div>
+              <button class="btn btn-ghost btn-sm" onclick="loadVersionsList()">🔄 Refresh</button>
+            </div>
+            <div id="versionsList">
+              <div style="padding:2rem;text-align:center">
+                <div class="spinner"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+
+        <!-- ════════════════════════════════════════
+           TAB 3 — ACCEPTANCE
+      ════════════════════════════════════════ -->
+        <div class="tab-panel" id="tab-acceptance">
+          <div style="display:flex;flex-direction:column;gap:1.5rem">
+
+            <!-- Stats cards -->
+            <div class="accept-stat-grid" id="acceptStatGrid">
+              <div class="skeleton" style="height:80px;border-radius:var(--radius-lg)"></div>
+              <div class="skeleton" style="height:80px;border-radius:var(--radius-lg)"></div>
+              <div class="skeleton" style="height:80px;border-radius:var(--radius-lg)"></div>
+            </div>
+
+            <!-- Progress bar -->
+            <div class="card">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem">
+                <div style="font-weight:700;font-size:0.9rem">Current Version Acceptance Rate</div>
+                <div style="font-family:var(--font-mono);font-size:1.25rem;font-weight:800" id="acceptPct">—</div>
+              </div>
+              <div class="progress-bar-wrap">
+                <div class="progress-bar-fill" id="acceptBar" style="width:0%"></div>
+              </div>
+              <div
+                style="display:flex;justify-content:space-between;font-size:0.72rem;color:var(--text-muted);margin-top:0.5rem">
+                <span id="acceptedLabel">— accepted</span>
+                <span id="pendingLabel">— pending</span>
+              </div>
+            </div>
+
+            <!-- User list -->
+            <div class="card" style="padding:0;overflow:hidden">
+              <div
+                style="padding:1rem 1.25rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between">
+                <div style="font-weight:700;font-size:0.9rem">Who Has Accepted</div>
+                <button class="btn btn-ghost btn-sm" onclick="loadAcceptance()">🔄 Refresh</button>
+              </div>
+              <div id="acceptUserList" style="max-height:400px;overflow-y:auto">
+                <div style="padding:2rem;text-align:center">
+                  <div class="spinner"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /tm-wrap -->
+    </main>
+  </div><!-- /layout -->
+
+
+  <!-- ══ CONFIRM PUBLISH MODAL ══ -->
+  <div class="modal-overlay" id="confirmModal">
+    <div class="modal-box">
+      <div style="font-size:2.5rem;margin-bottom:0.75rem">📋</div>
+      <h3>Publish Terms v<span id="confirmVersion">?</span>?</h3>
+      <p style="font-size:0.875rem;color:var(--text-secondary);margin:0.75rem 0 0.25rem">
+        This will immediately replace the current active version.
+      </p>
+      <div
+        style="background:rgba(230,126,34,0.08);border:1px solid rgba(230,126,34,0.2);border-radius:var(--radius-sm);padding:0.75rem 1rem;margin:1rem 0;font-size:0.82rem;color:var(--warning)">
+        ⚠️ <strong>Every registered user</strong> will be required to read and re-accept the updated terms on their next
+        login.
+        <span id="confirmEmailNote" style="display:none"> A notification email will be sent to all users.</span>
+      </div>
+      <div
+        style="background:var(--bg-secondary);border:1px solid var(--border);border-radius:var(--radius-sm);padding:0.75rem 1rem;margin-bottom:1.5rem;font-size:0.82rem">
+        <strong>Summary:</strong> <span id="confirmSummary" style="color:var(--text-secondary)">—</span>
+        <br><small style="color:var(--text-muted);margin-top:0.25rem;display:block">Version: <strong>v<span id="confirmVersionB">?</span></strong></small>
+      </div>
+      <div style="display:flex;gap:0.75rem">
+        <button class="btn btn-ghost" style="flex:1" onclick="closeConfirmModal()">Cancel</button>
+        <button class="btn btn-primary" style="flex:1;background:var(--accent)" onclick="doPublish()">
+          ✓ Confirm & Publish
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ ROLLBACK CONFIRM MODAL ══ -->
+  <div class="modal-overlay" id="rollbackModal">
+    <div class="modal-box">
+      <div style="font-size:2.5rem;margin-bottom:0.75rem">⏪</div>
+      <h3>Activate v<span id="rollbackVersion">?</span>?</h3>
+      <p style="font-size:0.875rem;color:var(--text-secondary);margin:0.75rem 0 1.5rem">
+        This will make <strong>v<span id="rollbackVersionB">?</span></strong> the active version.
+        All users who haven't accepted this specific version will be required to re-accept.
+      </p>
+      <div style="display:flex;gap:0.75rem">
+        <button class="btn btn-ghost" style="flex:1" onclick="closeRollbackModal()">Cancel</button>
+        <button class="btn btn-primary" style="flex:1" onclick="doActivate()" id="rollbackConfirmBtn">
+          ✓ Set as Active
+        </button>
+      </div>
+    </div>
+  </div>
+
+
+  <script src="js/app.js"></script>
+  <script>
+    /* ════════════════════════════════════════════════════════════════
+       ADMIN API CLIENT
+    ════════════════════════════════════════════════════════════════ */
+    const ADMIN_TOKEN_KEY = "lv_admin_token";
+    if (!localStorage.getItem(ADMIN_TOKEN_KEY)) window.location.href = "/admin-login.html";
+
+    const AdminAPI = {
+      async req(method, path, body = null) {
+        const token = localStorage.getItem(ADMIN_TOKEN_KEY);
+        if (!token) { window.location.href = "/admin-login.html"; return {}; }
+        const headers = { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" };
+        const res = await fetch(path, { method, headers, body: body ? JSON.stringify(body) : null });
+        const data = await res.json().catch(() => ({}));
+        if (res.status === 401) { localStorage.removeItem(ADMIN_TOKEN_KEY); window.location.href = "/admin-login.html"; }
+        return { ok: res.ok, status: res.status, data };
+      },
+      get: (p) => AdminAPI.req("GET", p),
+      post: (p, b) => AdminAPI.req("POST", p, b),
+      put: (p, b) => AdminAPI.req("PUT", p, b),
+    };
+
+    /* ════════════════════════════════════════════════════════════════
+       STATE
+    ════════════════════════════════════════════════════════════════ */
+    let currentTermsId = null;
+    let currentTermsVersion = null;
+    let hasUnsavedChanges = false;
+    let activateTargetId = null;
+    let activateTargetVer = null;
+
+    /* ════════════════════════════════════════════════════════════════
+       LOAD CURRENT TERMS
+    ════════════════════════════════════════════════════════════════ */
+    async function loadCurrent() {
+      const { ok, data } = await AdminAPI.get("/api/terms/current");
+
+      if (!ok || !data.id) {
+        document.getElementById("statusBar").className = "tc-status-bar no-terms";
+        document.getElementById("statusBar").innerHTML = `
+      <span>⚠️</span>
+      <span style="font-size:0.875rem">No active Terms version found. Create and publish your first version below.</span>`;
+        document.getElementById("richEditor").innerHTML =
+          `<h2>1. Acceptance of Terms</h2>\n<p>By using LintVertex, you agree to these Terms.</p>`;
+        updateEditorStats();
+        return;
+      }
+
+      currentTermsId = data.id;
+      currentTermsVersion = data.version;
+
+      // Status bar
+      const stats = await AdminAPI.get(`/api/admin/terms/${data.id}/stats`);
+      const s = stats.data?.stats || {};
+      const pct = s.total_users > 0 ? Math.round((s.accepted / s.total_users) * 100) : 0;
+
+      document.getElementById("statusBar").className = "tc-status-bar";
+      document.getElementById("statusBar").innerHTML = `
+    <span class="tc-version-pill">v${data.version} ACTIVE</span>
+    <span class="tc-stat-chip">📅 Effective <strong>${formatDate(data.effective_at)}</strong></span>
+    <span class="tc-stat-chip">✅ <strong>${s.accepted || 0}</strong> accepted</span>
+    <span class="tc-stat-chip">⏳ <strong>${s.pending || 0}</strong> pending</span>
+    <span class="tc-stat-chip" style="margin-left:auto;color:${pct < 50 ? "var(--warning)" : "var(--success)"}"><strong>${pct}%</strong> acceptance rate</span>`;
+
+      // Load into editor
+      document.getElementById("richEditor").innerHTML = data.content;
+      document.getElementById("newTitle").value = data.title;
+      document.getElementById("editingVersionLabel").textContent = `v${data.version}`;
+      document.getElementById("editModeBanner").classList.add("show");
+      hasUnsavedChanges = false;
+      setUnsaved(false);
+      updateEditorStats();
+      syncPreview();
+    }
+
+    /* ════════════════════════════════════════════════════════════════
+       EDITOR HELPERS
+    ════════════════════════════════════════════════════════════════ */
+    function fmt(cmd) {
+      document.getElementById("richEditor").focus();
+      document.execCommand(cmd, false, null);
+    }
+
+    function insertH2() {
+      document.getElementById("richEditor").focus();
+      const sel = window.getSelection();
+      const h2 = document.createElement("h2");
+      h2.textContent = sel && sel.toString() ? sel.toString() : "New Section";
+      if (sel && sel.rangeCount) {
+        const range = sel.getRangeAt(0);
+        range.deleteContents();
+        range.insertNode(h2);
+        range.setStartAfter(h2);
+        range.collapse(true);
+        sel.removeAllRanges();
+        sel.addRange(range);
+      }
+      onEditorInput();
+    }
+
+    function insertSection() {
+      const editor = document.getElementById("richEditor");
+      const sectionCount = editor.querySelectorAll("h2").length + 1;
+      editor.focus();
+      const h2 = document.createElement("h2");
+      h2.textContent = `${sectionCount}. New Section`;
+      const p = document.createElement("p");
+      p.textContent = "Enter section content here.";
+      const sel = window.getSelection();
+      if (sel && sel.rangeCount) {
+        const range = sel.getRangeAt(0);
+        range.collapse(false);
+        range.insertNode(p);
+        range.insertNode(h2);
+        range.setStartAfter(p);
+        sel.removeAllRanges();
+        sel.addRange(range);
+      } else {
+        editor.appendChild(h2);
+        editor.appendChild(p);
+      }
+      onEditorInput();
+    }
+
+    function clearFormat() {
+      document.getElementById("richEditor").focus();
+      document.execCommand("removeFormat", false, null);
+    }
+
+    function onEditorInput() {
+      updateEditorStats();
+      syncPreview();
+      setUnsaved(true);
+    }
+
+    function setUnsaved(state) {
+      hasUnsavedChanges = state;
+      document.getElementById("unsavedDot").classList.toggle("show", state);
+      document.getElementById("unsavedLabel").style.display = state ? "block" : "none";
+    }
+
+    function updateEditorStats() {
+      const editor = document.getElementById("richEditor");
+      const text = editor.innerText || "";
+      const words = text.trim().split(/\s+/).filter(Boolean).length;
+      const chars = text.length;
+      const sections = editor.querySelectorAll("h2").length;
+      document.getElementById("charCount").textContent = `${chars.toLocaleString()} chars · ${words.toLocaleString()} words`;
+      document.getElementById("sectionCount").textContent = `${sections} section${sections !== 1 ? "s" : ""}`;
+    }
+
+    function syncPreview() {
+      document.getElementById("previewBody").innerHTML =
+        document.getElementById("richEditor").innerHTML ||
+        `<p style="color:#aaa;text-align:center;padding:2rem">Nothing to preview</p>`;
+    }
+
+    function openPreviewPage() {
+      const draft = {
+        version: document.getElementById("newVersion").value.trim() || "DRAFT",
+        title: document.getElementById("newTitle").value.trim() || "Terms and Conditions",
+        content: document.getElementById("richEditor").innerHTML.trim(),
+        summary: document.getElementById("newSummary").value.trim(),
+        effective_at: document.getElementById("newEffectiveDate").value || new Date().toISOString()
+      };
+      localStorage.setItem("lv_terms_preview", JSON.stringify(draft));
+      window.open("/terms.html?preview=1", "_blank");
+    }
+
+    /* ════════════════════════════════════════════════════════════════
+       PRE-FILL REQUESTED DATA
+    ════════════════════════════════════════════════════════════════ */
+    document.getElementById("newVersion").value = "1.2";
+    document.getElementById("newTitle").value = "LintVertex Terms and Conditions";
+    document.getElementById("newSummary").value = "proper Navigation Bar";
+    document.getElementById("newEffectiveDate").value = "2026-04-04";
+
+    /* ════════════════════════════════════════════════════════════════
+       PUBLISH FLOW
+    ════════════════════════════════════════════════════════════════ */
+    function openConfirmModal() {
+      const version = document.getElementById("newVersion").value.trim();
+      const summary = document.getElementById("newSummary").value.trim();
+      const content = document.getElementById("richEditor").innerHTML.trim();
+      const title = document.getElementById("newTitle").value.trim();
+      const notify = document.getElementById("notifyUsers").checked;
+
+      if (!version) { Toast.warning("Enter a version number (e.g. 1.2)"); return; }
+      if (!title) { Toast.warning("Document title is required"); return; }
+      if (!content || content.length < 200) {
+        Toast.warning("Terms content is too short — please add proper content before publishing");
+        return;
+      }
+
+      // Validate version format
+      if (!/^\d+\.\d+(\.\d+)?$/.test(version)) {
+        Toast.error("Version must be in format: 1.0, 1.1, or 2.0.1");
+        return;
+      }
+
+      if (document.getElementById("confirmVersion")) document.getElementById("confirmVersion").textContent = version;
+      if (document.getElementById("confirmVersionB")) document.getElementById("confirmVersionB").textContent = version;
+      if (document.getElementById("confirmSummary")) document.getElementById("confirmSummary").textContent = summary || "No summary provided";
+      if (document.getElementById("confirmEmailNote")) document.getElementById("confirmEmailNote").style.display = notify ? "inline" : "none";
+
+      document.getElementById("confirmModal").classList.add("open");
+    }
+
+    function closeConfirmModal() {
+      document.getElementById("confirmModal").classList.remove("open");
+    }
+
+    async function doPublish() {
+      closeConfirmModal();
+
+      const version = document.getElementById("newVersion").value.trim();
+      const title = document.getElementById("newTitle").value.trim();
+      const content = document.getElementById("richEditor").innerHTML.trim();
+      const summary = document.getElementById("newSummary").value.trim();
+      const effDate = document.getElementById("newEffectiveDate").value;
+      const notify = document.getElementById("notifyUsers").checked;
+
+      const btn = document.getElementById("publishBtn");
+      btn.disabled = true;
+      btn.innerHTML = '<div class="spinner" style="display:inline-block;vertical-align:middle;margin-right:6px"></div> Publishing...';
+
+      const { ok, data } = await AdminAPI.post("/api/admin/terms/publish", {
+        version, title, content, summary,
+        effective_at: effDate ? new Date(effDate).toISOString() : new Date().toISOString(),
+        send_email_notification: notify,
+      });
+
+      btn.disabled = false;
+      btn.innerHTML = "🚀 Publish New Version";
+
+      const res = document.getElementById("pubResult");
+      res.style.display = "block";
+
+      if (ok) {
+        res.className = "pub-result ok";
+        res.innerHTML = `
+      ✅ <strong>Terms v${version} published successfully!</strong>
+      ${notify ? " Email notifications sent to all users." : ""}
+      All users will be prompted to accept the new terms on their next login.`;
+        Toast.success(`Terms v${version} published!`);
+        // Reset fields
+        document.getElementById("newVersion").value = "";
+        document.getElementById("newSummary").value = "";
+        setUnsaved(false);
+        // Reload status bar
+        await loadCurrent();
+        // Refresh versions list if visible
+        if (document.getElementById("tab-versions").classList.contains("active")) {
+          loadVersionsList();
+        }
+      } else {
+        res.className = "pub-result err";
+        res.textContent = `❌ ${data.error || "Publish failed — please try again"}`;
+        Toast.error(data.error || "Publish failed");
+      }
+    }
+
+    /* ════════════════════════════════════════════════════════════════
+       VERSION HISTORY
+    ════════════════════════════════════════════════════════════════ */
+    async function loadVersionsList() {
+      const list = document.getElementById("versionsList");
+      list.innerHTML = `<div style="padding:2rem;text-align:center"><div class="spinner"></div></div>`;
+
+      const { ok, data } = await AdminAPI.get("/api/admin/terms");
+      const versions = data?.versions || [];
+
+      if (!versions.length) {
+        list.innerHTML = `<div style="padding:2rem;text-align:center;color:var(--text-muted)">No versions published yet</div>`;
+        return;
+      }
+
+      list.innerHTML = versions.map(v => {
+        const pct = v.total_users > 0 ? Math.round((v.accepted_count / v.total_users) * 100) : 0;
+        return `
+    <div class="version-row">
+      <span class="ver-badge ${v.is_current ? "current" : ""}">v${v.version}</span>
+      <div class="ver-info">
+        <div class="ver-title">${escapeHtml(v.title)}</div>
+        <div class="ver-meta">
+          ${v.is_current ? "✅ Currently Active · " : ""}
+          Published ${formatRelative(v.created_at)}
+          · Effective ${formatDate(v.effective_at)}
+          ${v.summary ? ` · <em style="color:var(--text-muted)">${escapeHtml(v.summary)}</em>` : ""}
+        </div>
+      </div>
+      <div class="ver-stats">
+        <div class="ver-accepted">${v.accepted_count} accepted</div>
+        <div class="ver-pending">${v.pending_count} pending · ${pct}%</div>
+      </div>
+      <div class="ver-actions">
+        <button class="btn btn-ghost btn-sm" onclick="loadVersionIntoEditor('${v.id}')" title="Load into editor">
+          📝 Edit
+        </button>
+        ${!v.is_current ? `
+        <button class="btn btn-secondary btn-sm" onclick="openRollbackModal('${v.id}','${v.version}')">
+          ⏪ Restore
+        </button>` : ""}
+      </div>
+    </div>`;
+      }).join("");
+    }
+
+    async function loadVersionIntoEditor(termsId) {
+      const { ok, data } = await AdminAPI.get(`/api/terms/current`);
+
+      // Fetch the specific version
+      const db = await fetch(`/api/admin/terms/${termsId}/stats`, {
+        headers: { "Authorization": `Bearer ${localStorage.getItem(ADMIN_TOKEN_KEY)}` }
+      });
+      const vData = await db.json();
+
+      // We need to load the content — fetch it from current or pull from versions list
+      // Use the admin terms list endpoint to get full content isn't possible, so load from current if it matches
+      const { ok: ok2, data: td } = await AdminAPI.get("/api/terms/current");
+
+      if (ok2 && td.id === termsId) {
+        document.getElementById("richEditor").innerHTML = td.content;
+        document.getElementById("newTitle").value = td.title;
+        Toast.info("Loaded current active version into editor");
+      } else {
+        // For older versions, we don't store full content in the list
+        // We'd need a dedicated endpoint — for now show a message
+        Toast.info("Use the editor for the current active version. To restore an older version, click Restore.");
+        return;
+      }
+
+      // Switch to editor tab
+      document.querySelector('[data-tab="update"]').click();
+      setUnsaved(false);
+      updateEditorStats();
+      syncPreview();
+    }
+
+    /* ════════════════════════════════════════════════════════════════
+       ROLLBACK
+    ════════════════════════════════════════════════════════════════ */
+    function openRollbackModal(id, version) {
+      activateTargetId = id;
+      activateTargetVer = version;
+      document.getElementById("rollbackVersion").textContent = version;
+      document.getElementById("rollbackVersionB").textContent = version;
+      document.getElementById("rollbackModal").classList.add("open");
+    }
+
+    function closeRollbackModal() {
+      document.getElementById("rollbackModal").classList.remove("open");
+    }
+
+    async function doActivate() {
+      const btn = document.getElementById("rollbackConfirmBtn");
+      btn.disabled = true;
+      btn.innerHTML = '<div class="spinner" style="display:inline-block;vertical-align:middle;margin-right:6px"></div>';
+
+      const { ok, data } = await AdminAPI.post(`/api/admin/terms/${activateTargetId}/activate`, {});
+
+      btn.disabled = false;
+      btn.innerHTML = "✓ Set as Active";
+      closeRollbackModal();
+
+      if (ok) {
+        Toast.success(`v${activateTargetVer} is now the active version!`);
+        await loadCurrent();
+        loadVersionsList();
+      } else {
+        Toast.error(data.error || "Failed to activate version");
+      }
+    }
+
+    /* ════════════════════════════════════════════════════════════════
+       ACCEPTANCE STATS
+    ════════════════════════════════════════════════════════════════ */
+    async function loadAcceptance() {
+      // Get current terms id
+      const tv = await AdminAPI.get("/api/terms/current");
+      if (!tv.ok) return;
+
+      const { ok, data } = await AdminAPI.get(`/api/admin/terms/${tv.data.id}/stats`);
+      if (!ok) return;
+
+      const s = data.stats || {};
+      const pct = s.total_users > 0 ? Math.round((s.accepted / s.total_users) * 100) : 0;
+
+      // Stat cards
+      document.getElementById("acceptStatGrid").innerHTML = `
+    <div class="stat-card">
+      <div class="stat-value" style="color:var(--success)">${s.accepted}</div>
+      <div class="stat-label">Accepted</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value" style="color:${s.pending > 0 ? "var(--warning)" : "var(--success)"}">${s.pending}</div>
+      <div class="stat-label">Pending</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-value">${s.total_users}</div>
+      <div class="stat-label">Total Users</div>
+    </div>`;
+
+      // Progress bar
+      document.getElementById("acceptPct").textContent = `${pct}%`;
+      document.getElementById("acceptBar").style.width = `${pct}%`;
+      document.getElementById("acceptedLabel").textContent = `${s.accepted} accepted`;
+      document.getElementById("pendingLabel").textContent = `${s.pending} still need to accept`;
+
+      // User list
+      const users = data.accepted_users || [];
+      document.getElementById("acceptUserList").innerHTML = !users.length
+        ? `<div style="padding:2rem;text-align:center;color:var(--text-muted)">No acceptances yet for this version</div>`
+        : users.map(u => `
+      <div class="accept-user-row">
+        <div>
+          <strong style="font-size:0.82rem">${escapeHtml(u.username)}</strong>
+          <span style="color:var(--text-muted);font-size:0.75rem;margin-left:0.5rem">${escapeHtml(u.email)}</span>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:0.75rem;color:var(--text-muted)">${formatRelative(u.accepted_at)}</div>
+          ${u.ip ? `<div style="font-size:0.68rem;color:var(--text-muted)">📍 ${escapeHtml(u.ip)}</div>` : ""}
+        </div>
+      </div>`).join("");
+    }
+
+    /* ════════════════════════════════════════════════════════════════
+       MODAL CLOSE ON BACKDROP CLICK
+    ════════════════════════════════════════════════════════════════ */
+    document.querySelectorAll(".modal-overlay").forEach(m => {
+      m.addEventListener("click", e => {
+        if (e.target === m) {
+          m.classList.remove("open");
+        }
+      });
+    });
+
+    /* ════════════════════════════════════════════════════════════════
+       ADMIN LOGOUT
+    ════════════════════════════════════════════════════════════════ */
+    async function adminLogout() {
+      await AdminAPI.post("/api/admin/logout", {});
+      localStorage.removeItem(ADMIN_TOKEN_KEY);
+      window.location.href = "/admin-login.html";
+    }
+
+    /* ════════════════════════════════════════════════════════════════
+       TAB SWITCHING
+    ════════════════════════════════════════════════════════════════ */
+    initTabs();
+    document.querySelectorAll(".tab-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const t = btn.dataset.tab;
+        if (t === "versions") loadVersionsList();
+        if (t === "acceptance") loadAcceptance();
+      });
+    });
+
+    /* ════════════════════════════════════════════════════════════════
+       WARN BEFORE LEAVING WITH UNSAVED CHANGES
+    ════════════════════════════════════════════════════════════════ */
+    window.addEventListener("beforeunload", e => {
+      if (hasUnsavedChanges) {
+        e.preventDefault();
+        e.returnValue = "You have unsaved changes to the Terms. Are you sure you want to leave?";
+      }
+    });
+
+    /* ════════════════════════════════════════════════════════════════
+       INIT
+    ════════════════════════════════════════════════════════════════ */
+    // Add missing confirmVersionB span
+    document.getElementById("confirmModal").querySelectorAll("span").forEach(s => {
+      if (s.id === "confirmVersion") {
+        const b = document.createElement("span");
+        b.id = "confirmVersionB";
+        // already defined inline
+      }
+    });
+
+    loadCurrent();
+  </script>
+</body>
+
+</html>

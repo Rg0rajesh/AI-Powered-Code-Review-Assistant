@@ -1,0 +1,765 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <title>Notification Manager – LintVertex Admin</title>
+  <link rel="stylesheet" href="css/main.css" />
+  <style>
+    .notif-composer {
+      display: grid;
+      grid-template-columns: 1fr 340px;
+      gap: 1.5rem;
+      align-items: start;
+    }
+
+    @media(max-width:900px) {
+      .notif-composer {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .type-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+
+    @media(max-width:700px) {
+      .type-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    .type-card {
+      padding: 0.625rem 0.5rem;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-md);
+      background: var(--bg-card);
+      cursor: pointer;
+      text-align: center;
+      transition: all var(--transition);
+      font-family: var(--font-ui);
+    }
+
+    .type-card:hover {
+      border-color: var(--accent);
+    }
+
+    .type-card.active {
+      border-color: var(--accent);
+      background: var(--accent-light);
+    }
+
+    .type-card .ti {
+      font-size: 1.25rem;
+      display: block;
+      margin-bottom: 0.2rem;
+    }
+
+    .type-card .tl {
+      font-size: 0.68rem;
+      font-weight: 700;
+      color: var(--text-secondary);
+    }
+
+    .type-card.active .tl {
+      color: var(--accent);
+    }
+
+    .rcpt-bar {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .rcpt-btn {
+      padding: 0.375rem 0.875rem;
+      border: 1.5px solid var(--border);
+      border-radius: 100px;
+      background: var(--bg-card);
+      cursor: pointer;
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      font-family: var(--font-ui);
+      transition: all var(--transition);
+    }
+
+    .rcpt-btn:hover {
+      border-color: var(--accent);
+    }
+
+    .rcpt-btn.active {
+      border-color: var(--accent);
+      background: var(--accent-light);
+      color: var(--accent);
+    }
+
+    /* Sent log */
+    .log-row {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 0.875rem 1.1rem;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.82rem;
+      transition: background var(--transition);
+    }
+
+    .log-row:last-child {
+      border-bottom: none;
+    }
+
+    .log-row:hover {
+      background: var(--accent-light);
+    }
+
+    .log-icon {
+      font-size: 1.25rem;
+      flex-shrink: 0;
+    }
+
+    .log-badge {
+      font-size: 0.65rem;
+      font-weight: 700;
+      padding: 0.15rem 0.5rem;
+      border-radius: 100px;
+      background: var(--accent-light);
+      color: var(--accent);
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .log-badge.global {
+      background: rgba(39, 174, 96, 0.12);
+      color: var(--success);
+    }
+
+    /* Preview card */
+    .notif-preview {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      position: sticky;
+      top: 80px;
+    }
+
+    .preview-bar {
+      padding: 0.625rem 1rem;
+      background: var(--bg-card);
+      border-bottom: 1px solid var(--border);
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+    }
+
+    .preview-notif {
+      margin: 1rem;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      border-left: 3px solid var(--accent);
+      padding: 0.875rem 1rem;
+    }
+
+    .preview-title {
+      font-size: 0.875rem;
+      font-weight: 700;
+      margin-bottom: 0.25rem;
+    }
+
+    .preview-msg {
+      font-size: 0.78rem;
+      color: var(--text-secondary);
+      line-height: 1.5;
+      margin-bottom: 0.5rem;
+    }
+
+    .preview-meta {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+      font-size: 0.68rem;
+      color: var(--text-muted);
+    }
+
+    .preview-type-pill {
+      padding: 0.12rem 0.5rem;
+      border-radius: 100px;
+      font-size: 0.62rem;
+      font-weight: 700;
+      background: var(--accent-light);
+      color: var(--accent);
+    }
+
+    /* Stats row */
+    .notif-stats {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    @media(max-width:700px) {
+      .notif-stats {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    .send-result {
+      display: none;
+      padding: 0.875rem 1.1rem;
+      border-radius: var(--radius-md);
+      margin-top: 1rem;
+      font-size: 0.875rem;
+    }
+
+    .send-result.ok {
+      background: rgba(39, 174, 96, 0.1);
+      border: 1px solid var(--success);
+      color: var(--success);
+    }
+
+    .send-result.err {
+      background: rgba(192, 57, 43, 0.1);
+      border: 1px solid var(--error);
+      color: var(--error);
+    }
+  </style>
+</head>
+
+<body>
+  <nav class="navbar">
+    <a href="/index.html" class="logo-text">Lint<span>Vertex</span></a>
+    <ul class="nav-links">
+      <li><a href="/dashboard.html">Dashboard</a></li>
+      <li><a href="/analyze.html">Analyze</a></li>
+      <li><a href="/rooms.html">Rooms</a></li>
+    </ul>
+    <div style="display:flex;align-items:center;gap:0.75rem">
+      <div class="theme-toggle">
+        <span class="theme-label">☀️</span>
+        <button class="toggle-track">
+          <div class="toggle-thumb"></div>
+        </button>
+      </div>
+
+      <a href="/notifications.html" class="notif-bell" data-notif-count="0" title="Notifications">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+          <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+        </svg>
+        <span class="notif-badge" style="display:none">0</span>
+      </a>
+
+      <button class="btn btn-danger btn-sm" onclick="adminLogout()">🔒 End Session</button>
+    </div>
+  </nav>
+
+  <div class="layout">
+    <aside class="sidebar">
+      <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:1.5rem;padding:0 0.25rem">
+        <div id="sidebarAvatar"
+          style="width:36px;height:36px;border-radius:50%;background:var(--accent-light);border:2px solid var(--accent);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.8rem;overflow:hidden;flex-shrink:0">
+        </div>
+        <div>
+          <div style="font-weight:700;font-size:0.875rem" data-user-name></div>
+          <div style="font-size:0.7rem;color:var(--text-muted)" id="sidebarRole"></div>
+        </div>
+      </div>
+
+      <ul class="sidebar-nav">
+        <li><a href="/admin.html"><svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="2">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+            </svg>Admin Panel</a></li>
+        <li><a href="/admin-email.html"><svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="2">
+              <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+              <polyline points="22,6 12,13 2,6" />
+            </svg>Email Center</a></li>
+        <li><a href="/admin-terms.html"><svg class="sidebar-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="2">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+              <polyline points="14 2 14 8 20 8" />
+            </svg>Terms Manager</a></li>
+        <li><a href="/admin-notifications.html" class="active"><svg class="sidebar-icon" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2">
+              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+              <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+            </svg>Notifications</a></li>
+      </ul>
+    </aside>
+
+    <main class="main-content">
+      <div class="page-title">🔔 Notification Manager</div>
+      <p class="page-subtitle">Send and manage in-app notifications for all users</p>
+
+      <!-- Stats -->
+      <div class="notif-stats" id="notifStats">
+        <div class="skeleton" style="height:70px;border-radius:var(--radius-lg)"></div>
+        <div class="skeleton" style="height:70px;border-radius:var(--radius-lg)"></div>
+        <div class="skeleton" style="height:70px;border-radius:var(--radius-lg)"></div>
+        <div class="skeleton" style="height:70px;border-radius:var(--radius-lg)"></div>
+      </div>
+
+      <!-- Tabs -->
+      <div class="tabs">
+        <button class="tab-btn active" data-tab="send">✉️ Send Notification</button>
+        <button class="tab-btn" data-tab="manage">📋 Manage Sent</button>
+      </div>
+
+      <!-- ── SEND TAB ── -->
+      <div class="tab-panel active" id="tab-send">
+        <div class="notif-composer">
+          <!-- Form -->
+          <div>
+            <!-- Type -->
+            <div class="form-group">
+              <label class="form-label">Notification Type</label>
+              <div class="type-grid">
+                <div class="type-card active" onclick="setNotifType('feature',this)"><span class="ti">🚀</span><span
+                    class="tl">Feature</span></div>
+                <div class="type-card" onclick="setNotifType('announcement',this)"><span class="ti">📢</span><span
+                    class="tl">Announcement</span></div>
+                <div class="type-card" onclick="setNotifType('update',this)"><span class="ti">🔄</span><span
+                    class="tl">Update</span></div>
+                <div class="type-card" onclick="setNotifType('terms',this)"><span class="ti">📋</span><span
+                    class="tl">Terms</span></div>
+                <div class="type-card" onclick="setNotifType('security',this)"><span class="ti">🛡️</span><span
+                    class="tl">Security</span></div>
+                <div class="type-card" onclick="setNotifType('maintenance',this)"><span class="ti">🔧</span><span
+                    class="tl">Maintenance</span></div>
+                <div class="type-card" onclick="setNotifType('feedback_reply',this)"><span class="ti">💬</span><span
+                    class="tl">Reply</span></div>
+                <div class="type-card" onclick="setNotifType('system',this)"><span class="ti">⚙️</span><span
+                    class="tl">System</span></div>
+              </div>
+            </div>
+
+            <!-- Recipients -->
+            <div class="form-group">
+              <label class="form-label">Send To</label>
+              <div class="rcpt-bar">
+                <button class="rcpt-btn active" onclick="setRcpt('all',this)">🌐 All Users</button>
+                <button class="rcpt-btn" onclick="setRcpt('single',this)">👤 Single User</button>
+                <button class="rcpt-btn" onclick="setRcpt('role_user',this)">👥 All Regular Users</button>
+                <button class="rcpt-btn" onclick="setRcpt('role_admin',this)">🛡️ Admins Only</button>
+              </div>
+              <div id="singleRecipientField" style="display:none;margin-top:0.5rem">
+                <div style="position:relative">
+                  <input type="text" class="form-input" id="recipientId" placeholder="User UUID or email..."
+                    oninput="checkFeedbackSearch()" />
+                  <div id="feedbackSearchStatus"
+                    style="position:absolute;right:0.75rem;top:50%;transform:translateY(-50%);display:none;font-size:0.75rem;cursor:pointer">
+                  </div>
+                </div>
+                <div id="feedbackSearchResult"
+                  style="display:none;margin-top:0.5rem;padding:0.75rem;background:var(--accent-light);border:1px solid var(--accent);border-radius:var(--radius-sm);font-size:0.82rem">
+                </div>
+              </div>
+            </div>
+
+            <!-- Content -->
+            <div class="form-group">
+              <label class="form-label">Title <span style="color:var(--text-muted);font-weight:400">— shown in
+                  bold</span></label>
+              <input type="text" class="form-input" id="notifTitle" placeholder="e.g. New Feature: AI Analysis v2.0"
+                oninput="syncNotifPreview()" maxlength="100" />
+              <div style="text-align:right;font-size:0.7rem;color:var(--text-muted);margin-top:0.25rem" id="titleLen">
+                0/100</div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Message <span style="color:var(--text-muted);font-weight:400">— the
+                  description</span></label>
+              <textarea class="form-input" id="notifMessage" rows="3"
+                placeholder="We've just shipped a major upgrade to the AI analysis pipeline..."
+                oninput="syncNotifPreview()" maxlength="300"></textarea>
+              <div style="text-align:right;font-size:0.7rem;color:var(--text-muted);margin-top:0.25rem" id="msgLen">
+                0/300</div>
+            </div>
+
+            <div style="display:grid;grid-template-columns:60px 1fr;gap:0.875rem;margin-bottom:1rem">
+              <div class="form-group" style="margin:0">
+                <label class="form-label">Icon</label>
+                <input type="text" class="form-input" id="notifIcon" value="🔔" oninput="syncNotifPreview()"
+                  style="text-align:center;font-size:1.25rem" maxlength="4" />
+              </div>
+              <div class="form-group" style="margin:0">
+                <label class="form-label">Action Label <span
+                    style="color:var(--text-muted);font-weight:400">optional</span></label>
+                <input type="text" class="form-input" id="notifActionLabel" placeholder="View Now"
+                  oninput="syncNotifPreview()" />
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Action URL <span style="color:var(--text-muted);font-weight:400">optional —
+                  where clicking goes</span></label>
+              <input type="text" class="form-input" id="notifActionUrl" placeholder="/analyze.html or https://..." />
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Expires After <span
+                  style="color:var(--text-muted);font-weight:400">optional</span></label>
+              <select class="form-input" id="notifExpiry">
+                <option value="">Never expire</option>
+                <option value="24">24 hours</option>
+                <option value="72">3 days</option>
+                <option value="168">1 week</option>
+                <option value="720">30 days</option>
+              </select>
+            </div>
+
+            <button class="btn btn-primary btn-lg" id="sendNotifBtn" onclick="sendNotification()">
+              🔔 Send Notification
+            </button>
+
+            <div class="send-result" id="sendResult"></div>
+          </div>
+
+          <!-- Preview -->
+          <div>
+            <div class="notif-preview">
+              <div class="preview-bar">📱 Live Preview</div>
+              <div style="padding:0.875rem;font-size:0.7rem;color:var(--text-muted);text-align:center">
+                As users will see it in their notification center
+              </div>
+              <div id="notifPreviewWrap" style="padding:0 0.875rem 1rem">
+                <div class="preview-notif" id="notifPreview">
+                  <div style="display:flex;align-items:center;gap:0.625rem;margin-bottom:0.5rem">
+                    <span id="pIcon" style="font-size:1.25rem">🔔</span>
+                    <div style="flex:1">
+                      <div class="preview-title" id="pTitle">Notification title</div>
+                    </div>
+                  </div>
+                  <div class="preview-msg" id="pMsg">Notification message will appear here...</div>
+                  <div class="preview-meta">
+                    <span class="preview-type-pill" id="pType">Feature</span>
+                    <span>Just now</span>
+                    <span id="pAction" style="color:var(--accent);font-weight:600;display:none"></span>
+                    <div style="width:6px;height:6px;border-radius:50%;background:var(--accent);margin-left:auto"></div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Delivery info -->
+              <div style="border-top:1px solid var(--border);padding:0.875rem;font-size:0.78rem">
+                <div
+                  style="font-weight:700;margin-bottom:0.5rem;color:var(--text-muted);font-size:0.7rem;text-transform:uppercase;letter-spacing:0.07em">
+                  Delivery</div>
+                <div id="deliveryInfo" style="color:var(--text-secondary)">
+                  Will be sent to <strong id="deliveryTarget">all users</strong>
+                </div>
+              </div>
+            </div>
+
+            <!-- Quick templates -->
+            <div class="card" style="margin-top:1rem;padding:1rem">
+              <div
+                style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--text-muted);margin-bottom:0.75rem">
+                Quick Templates</div>
+              <div style="display:flex;flex-direction:column;gap:0.375rem">
+                <button class="btn btn-ghost btn-sm" style="justify-content:flex-start"
+                  onclick="quickFill('feature')">🚀 New feature shipped</button>
+                <button class="btn btn-ghost btn-sm" style="justify-content:flex-start" onclick="quickFill('terms')">📋
+                  Terms updated</button>
+                <button class="btn btn-ghost btn-sm" style="justify-content:flex-start"
+                  onclick="quickFill('maintenance')">🔧 Scheduled maintenance</button>
+                <button class="btn btn-ghost btn-sm" style="justify-content:flex-start"
+                  onclick="quickFill('security')">🛡️ Security notice</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── MANAGE TAB ── -->
+      <div class="tab-panel" id="tab-manage">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
+          <div style="font-size:0.875rem;color:var(--text-secondary)">All sent notifications — click delete to remove
+            from all users</div>
+          <button class="btn btn-ghost btn-sm" onclick="loadSent()">🔄 Refresh</button>
+        </div>
+        <div class="card" style="padding:0;overflow:hidden">
+          <div id="sentList" style="max-height:600px;overflow-y:auto">
+            <div style="padding:2rem;text-align:center">
+              <div class="spinner"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="js/app.js"></script>
+  <script>
+    const ADMIN_TOKEN_KEY = "lv_admin_token";
+    if (!localStorage.getItem(ADMIN_TOKEN_KEY)) window.location.href = "/admin-login.html";
+
+    const AdminAPI = {
+      async req(m, p, b = null) {
+        const token = localStorage.getItem(ADMIN_TOKEN_KEY);
+        const headers = { "Authorization": `Bearer ${token}`, "Content-Type": "application/json" };
+        const res = await fetch(p, { method: m, headers, body: b ? JSON.stringify(b) : null });
+        const data = await res.json().catch(() => ({}));
+        if (res.status === 401) { localStorage.removeItem(ADMIN_TOKEN_KEY); window.location.href = "/admin-login.html"; }
+        return { ok: res.ok, data };
+      },
+      get: p => AdminAPI.req("GET", p),
+      post: (p, b) => AdminAPI.req("POST", p, b),
+      del: p => AdminAPI.req("DELETE", p),
+    };
+
+    let notifType = "feature";
+    let rcptType = "all";
+    let userCount = 0;
+
+    const TYPE_CFG = {
+      feature: { icon: "🚀", label: "Feature" },
+      announcement: { icon: "📢", label: "Announcement" },
+      update: { icon: "🔄", label: "Update" },
+      terms: { icon: "📋", label: "Terms" },
+      security: { icon: "🛡️", label: "Security" },
+      maintenance: { icon: "🔧", label: "Maintenance" },
+      feedback_reply: { icon: "💬", label: "Reply" },
+      system: { icon: "⚙️", label: "System" },
+    };
+
+    const QUICK = {
+      feature: { title: "New Feature Available! 🚀", message: "We've shipped a major upgrade. Check out the new capabilities in your dashboard.", icon: "🚀", action: "View Dashboard", url: "/dashboard.html" },
+      terms: { title: "Terms & Conditions Updated 📋", message: "Our Terms and Conditions have been updated. Please review and accept the new terms to continue using LintVertex.", icon: "📋", action: "Review Terms", url: "/terms.html" },
+      maintenance: { title: "Scheduled Maintenance 🔧", message: "LintVertex will undergo brief maintenance. We expect minimal downtime and will be back at full speed shortly.", icon: "🔧", action: "", url: "" },
+      security: { title: "Important Security Notice 🛡️", message: "We've made security improvements to your account. Please review your profile settings and ensure your password is up to date.", icon: "🛡️", action: "Review Settings", url: "/profile.html" },
+    };
+
+    async function loadStats() {
+      const { ok, data } = await AdminAPI.get("/api/admin/stats");
+      if (!ok) return;
+      userCount = data.total_users || 0;
+      const notifR = await AdminAPI.get("/api/admin/notifications?limit=1000");
+      const notifs = notifR.data?.notifications || [];
+      const global = notifs.filter(n => n.is_global).length;
+      document.getElementById("notifStats").innerHTML = `
+        <div class="stat-card"><div class="stat-value">${notifs.length}</div><div class="stat-label">Total Sent</div></div>
+        <div class="stat-card"><div class="stat-value">${global}</div><div class="stat-label">Global</div></div>
+        <div class="stat-card"><div class="stat-value">${userCount}</div><div class="stat-label">Users</div></div>
+        <div class="stat-card"><div class="stat-value">${notifs.filter(n => !n.is_global).length}</div><div class="stat-label">Personal</div></div>`;
+      updateDeliveryInfo();
+    }
+
+    function setNotifType(t, card) {
+      notifType = t;
+      document.querySelectorAll(".type-card").forEach(c => c.classList.remove("active"));
+      card.classList.add("active");
+      const cfg = TYPE_CFG[t];
+      if (cfg) document.getElementById("notifIcon").value = cfg.icon;
+      syncNotifPreview();
+    }
+
+    function setRcpt(t, btn) {
+      rcptType = t;
+      document.querySelectorAll(".rcpt-btn").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      document.getElementById("singleRecipientField").style.display = t === "single" ? "block" : "none";
+      updateDeliveryInfo();
+    }
+
+    function updateDeliveryInfo() {
+      const labels = { all: `all ${userCount} users`, single: "1 specific user", role_user: "all regular users", role_admin: "all admins" };
+      document.getElementById("deliveryTarget").textContent = labels[rcptType] || rcptType;
+    }
+
+    function syncNotifPreview() {
+      const title = document.getElementById("notifTitle").value || "Notification title";
+      const message = document.getElementById("notifMessage").value || "Notification message will appear here...";
+      const icon = document.getElementById("notifIcon").value || "🔔";
+      const action = document.getElementById("notifActionLabel").value;
+      const cfg = TYPE_CFG[notifType] || TYPE_CFG.system;
+
+      document.getElementById("pTitle").textContent = title;
+      document.getElementById("pMsg").textContent = message;
+      document.getElementById("pIcon").textContent = icon;
+      document.getElementById("pType").textContent = cfg.label;
+
+      const pAction = document.getElementById("pAction");
+      if (action) { pAction.textContent = action + " →"; pAction.style.display = ""; }
+      else pAction.style.display = "none";
+
+      // Char counts
+      document.getElementById("titleLen").textContent = `${title.length === "Notification title".length && !document.getElementById("notifTitle").value ? 0 : document.getElementById("notifTitle").value.length}/100`;
+      document.getElementById("msgLen").textContent = `${document.getElementById("notifMessage").value.length}/300`;
+    }
+
+    function quickFill(key) {
+      const q = QUICK[key];
+      if (!q) return;
+      document.getElementById("notifTitle").value = q.title;
+      document.getElementById("notifMessage").value = q.message;
+      document.getElementById("notifIcon").value = q.icon;
+      document.getElementById("notifActionLabel").value = q.action;
+      document.getElementById("notifActionUrl").value = q.url;
+
+      // Also set type
+      const typeCard = document.querySelector(`[onclick*="setNotifType('${key}',"]`) ||
+        document.querySelector(`[onclick*="'${key}'"]`);
+      if (typeCard) typeCard.click();
+      syncNotifPreview();
+    }
+
+    async function sendNotification() {
+      const title = document.getElementById("notifTitle").value.trim();
+      const message = document.getElementById("notifMessage").value.trim();
+      if (!title || !message) { Toast.warning("Title and message required"); return; }
+
+      let recipientId = "";
+      if (rcptType === "single") {
+        recipientId = document.getElementById("recipientId").value.trim();
+        if (!recipientId) { Toast.warning("Enter a user ID or email"); return; }
+      }
+
+      const rcptLabel = { all: `all ${userCount} users`, single: "1 user", role_user: "all regular users", role_admin: "all admins" }[rcptType];
+      if (!confirm(`Send notification to ${rcptLabel}?\n\n"${title}"`)) return;
+
+      const btn = document.getElementById("sendNotifBtn");
+      btn.disabled = true; btn.innerHTML = '<div class="spinner"></div> Sending...';
+
+      const expiry = document.getElementById("notifExpiry").value;
+      const payload = {
+        recipient_type: rcptType,
+        recipient_id: recipientId || undefined,
+        type: notifType,
+        title, message,
+        icon: document.getElementById("notifIcon").value || "🔔",
+        action_url: document.getElementById("notifActionUrl").value,
+        action_label: document.getElementById("notifActionLabel").value,
+        expires_hours: expiry ? parseInt(expiry) : undefined,
+      };
+
+      const { ok, data } = await AdminAPI.post("/api/admin/notifications/send", payload);
+      btn.disabled = false; btn.innerHTML = "🔔 Send Notification";
+
+      const res = document.getElementById("sendResult");
+      res.style.display = "block";
+      if (ok) {
+        res.className = "send-result ok";
+        res.innerHTML = `✅ <strong>Notification sent to ${data.sent_count} user(s)!</strong>`;
+        Toast.success(`Notification sent to ${data.sent_count} user(s)!`);
+        loadStats();
+      } else {
+        res.className = "send-result err";
+        res.textContent = `❌ ${data.error || "Send failed"}`;
+        Toast.error(data.error || "Failed");
+      }
+    }
+
+    async function loadSent() {
+      const { ok, data } = await AdminAPI.get("/api/admin/notifications?limit=200");
+      const notifs = data?.notifications || [];
+      const list = document.getElementById("sentList");
+
+      if (!notifs.length) {
+        list.innerHTML = `<div style="padding:2rem;text-align:center;color:var(--text-muted)">No notifications sent yet</div>`;
+        return;
+      }
+
+      list.innerHTML = notifs.map(n => {
+        const cfg = TYPE_CFG[n.type] || TYPE_CFG.system;
+        return `
+          <div class="log-row">
+            <div class="log-icon">${n.icon || cfg.icon}</div>
+            <div style="flex:1;min-width:0">
+              <div style="font-weight:700;font-size:0.82rem;margin-bottom:0.15rem">${escapeHtml(n.title)}</div>
+              <div style="font-size:0.72rem;color:var(--text-muted)">${escapeHtml(n.message.slice(0, 60))}${n.message.length > 60 ? "..." : ""}</div>
+            </div>
+            <span class="log-badge${n.is_global ? " global" : ""}">${n.is_global ? "🌐 Global" : "👤 Personal"}</span>
+            <span style="font-size:0.72rem;color:var(--text-muted);white-space:nowrap">${formatRelative(n.created_at)}</span>
+            <button class="btn btn-ghost btn-sm" style="color:var(--error);flex-shrink:0" onclick="deleteNotif('${n.id}',this)">🗑</button>
+          </div>`;
+      }).join("");
+    }
+
+    async function deleteNotif(id, btn) {
+      if (!confirm("Delete this notification? It will be removed for all users.")) return;
+      btn.disabled = true;
+      const { ok } = await AdminAPI.del(`/api/admin/notifications/${id}`);
+      if (ok) { Toast.success("Deleted"); loadSent(); loadStats(); }
+      else { Toast.error("Failed to delete"); btn.disabled = false; }
+    }
+
+    async function adminLogout() {
+      await AdminAPI.req("POST", "/api/admin/logout");
+      localStorage.removeItem(ADMIN_TOKEN_KEY);
+      window.location.href = "/admin-login.html";
+    }
+
+    initTabs();
+    document.querySelector('[data-tab="manage"]').addEventListener("click", loadSent);
+    loadStats();
+    syncNotifPreview();
+
+    // Handle ?email=... from Feedback panel
+    const urlParams = new URLSearchParams(window.location.search);
+    const prefillEmail = urlParams.get('email');
+    if (prefillEmail) {
+      const rcptBtn = document.querySelector('.rcpt-btn[onclick*="single"]');
+      if (rcptBtn) setRcpt('single', rcptBtn);
+      document.getElementById('recipientId').value = prefillEmail;
+      checkFeedbackSearch(); // Trigger lookup
+    }
+    async function checkFeedbackSearch() {
+      const query = document.getElementById('recipientId').value.trim();
+      const status = document.getElementById('feedbackSearchStatus');
+      const result = document.getElementById('feedbackSearchResult');
+
+      status.style.display = 'none';
+      result.style.display = 'none';
+
+      if (query.length < 5 || !query.includes('@')) return;
+
+      const { ok, data } = await AdminAPI.get(`/api/admin/feedback?email=${encodeURIComponent(query)}`);
+      if (ok && data.feedback && data.feedback.length > 0) {
+        const fb = data.feedback[0];
+        status.innerHTML = `💬 <span style="color:var(--accent);font-weight:700">Has Feedback</span>`;
+        status.style.display = 'block';
+        status.onclick = () => {
+          result.innerHTML = `
+                  <div style="display:flex;justify-content:space-between;margin-bottom:0.5rem">
+                    <strong>Found Recent Feedback:</strong>
+                    <button class="btn btn-ghost btn-sm" style="padding:0;min-width:24px" onclick="document.getElementById('feedbackSearchResult').style.display='none'">✕</button>
+                  </div>
+                  <div style="font-style:italic;margin-bottom:0.75rem;color:var(--text-secondary)">"${fb.text}"</div>
+                  <button class="btn btn-primary btn-sm btn-full" onclick="applyFeedbackToNotif('${fb.text.replace(/'/g, "\\'")}', '${(fb.user || 'Developer').replace(/'/g, "\\'")}')">
+                    ✨ Use as Reply Template
+                  </button>
+                `;
+          result.style.display = 'block';
+        };
+      }
+    }
+
+    function applyFeedbackToNotif(text, user) {
+      document.getElementById('notifTitle').value = `Reply to your feedback`;
+      document.getElementById('notifMessage').value = `Hi ${user}, thank you for your feedback: "${text.slice(0, 50)}...". Our response: `;
+      document.getElementById('notifIcon').value = `💬`;
+
+      // Set type to feedback_reply if exists
+      const replyType = document.querySelector('.type-card[onclick*="feedback_reply"]');
+      if (replyType) setNotifType('feedback_reply', replyType);
+
+      syncNotifPreview();
+      document.getElementById('feedbackSearchResult').style.display = 'none';
+      Toast.success("Feedback applied to notification!");
+    }
+  </script>
+</body>
+
+</html>
