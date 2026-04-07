@@ -267,10 +267,10 @@ def send_feature_announcement(to_email: str, username: str, subject: str, headli
         "cta_text": cta_text,
         "cta_url": cta_url
     }
-    return send_admin_email(to_email, subject, _base_template(html), template_id=Config.ADMIN_EMAILJS_FEATURE_TEMPLATE_ID, params=params)
+    return send_admin_email(to_email, subject, _base_template(html), template_id=Config.ADMIN_EMAILJS_ANNOUNCEMENT_TEMPLATE_ID, params=params)
 
 def send_custom_email(to_email: str, username: str, subject: str, headline: str, body_html: str, tag_label: str = "", cta_text: str = "", cta_url: str = "", **kwargs) -> bool:
-    """Send a custom email via Admin EmailJS."""
+    """Send a custom email via Admin EmailJS (uses announcement template)."""
     html = ""
     if tag_label:
         html += f"<div class='tag tag-orange'>{tag_label}</div>"
@@ -290,7 +290,7 @@ def send_custom_email(to_email: str, username: str, subject: str, headline: str,
         "cta_text": cta_text,
         "cta_url": cta_url
     }
-    return send_admin_email(to_email, subject, _base_template(html), template_id=Config.ADMIN_EMAILJS_CUSTOM_TEMPLATE_ID, params=params)
+    return send_admin_email(to_email, subject, _base_template(html), template_id=Config.ADMIN_EMAILJS_ANNOUNCEMENT_TEMPLATE_ID, params=params)
 
 def send_feedback_reply(to_email: str, username: str, original_feedback: str, reply_text: str):
     html = f"<h2>Feedback Response</h2><p>Hello {username},</p><p>We have a response to your feedback:</p><p style='font-style:italic;color:#666'>\"{original_feedback}\"</p><hr><p>{reply_text}</p>"
