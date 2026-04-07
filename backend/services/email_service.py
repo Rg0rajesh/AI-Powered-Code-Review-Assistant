@@ -143,23 +143,49 @@ def send_welcome_email(to_email: str, username: str) -> bool:
 def send_password_otp_email(to_email: str, username: str, otp: str):
     return send_otp_email(to_email, username, otp)
 
-def send_feature_announcement(to_email: str, username: str, title: str, description: str, action_url: str):
-    html = f"<h2>\ud83d\ude80 {title}</h2><p>Hi {username},</p><p>{description}</p><p><a href='{action_url}' class='btn'>Explore Now</a></p>"
-    return send_email(to_email, title, _base_template(html))
+def send_feature_announcement(to_email: str, username: str, subject: str, headline: str, body_html: str, features: list = None, cta_text: str = "Explore Now", cta_url: str = "", **kwargs) -> bool:
+    """Send a feature announcement email with optional features list and CTA."""
+    html = f"<h2>🚀 {headline}</h2><p>Hi {username},</p>{body_html}"
+    
+    # Add features list if provided
+    if features:
+        html += "<ul style='margin: 20px 0'>"
+        for feature in features:
+            if isinstance(feature, dict):
+                icon = feature.get('icon', '✨')
+                title = feature.get('title', '')
+                desc = feature.get('desc', '')
+                html += f"<li>{icon} <strong>{title}</strong> - {desc}</li>"
+        html += "</ul>"
+    
+    # Add CTA button if provided
+    if cta_url and cta_text:
+        html += f"<p><a href='{cta_url}' class='btn'>{cta_text}</a></p>"
+    
+    return send_email(to_email, subject, _base_template(html))
 
-def send_custom_email(to_email: str, username: str, subject: str, headline: str, body_html: str):
-    html = f"<h2>{headline}</h2><p>Hi {username},</p> {body_html}"
+def send_custom_email(to_email: str, username: str, subject: str, headline: str, body_html: str, tag_label: str = "", cta_text: str = "", cta_url: str = "", **kwargs) -> bool:
+    """Send a custom email with optional tag and CTA."""
+    html = ""
+    if tag_label:
+        html += f"<div class='tag tag-orange'>{tag_label}</div>"
+    
+    html += f"<h2>{headline}</h2><p>Hi {username},</p>{body_html}"
+    
+    if cta_url and cta_text:
+        html += f"<p><a href='{cta_url}' class='btn'>{cta_text}</a></p>"
+    
     return send_email(to_email, subject, _base_template(html))
 
 def send_feedback_reply(to_email: str, username: str, original_feedback: str, reply_text: str):
     html = f"<h2>Feedback Response</h2><p>Hello {username},</p><p>We have a response to your feedback:</p><p style='font-style:italic;color:#666'>\"{original_feedback}\"</p><hr><p>{reply_text}</p>"
     return send_email(to_email, "Re: Your feedback - LintVertex", _base_template(html))
 
-def send_policy_notice(to_email: str, username: str, subject: str, policy_title: str, body_html: str, effective_date: str = "", tag_label: str = "Policy Update", tag_type: str = "orange") -> bool:
+def send_policy_notice(to_email: str, username: str, subject: str, headline: str, body_html: str, effective_date: str = "", tag_label: str = "Policy Update", **kwargs) -> bool:
     """Send a formal policy notice (like terms changes) to users."""
     html = f"""
-    <div class="tag tag-{tag_type}">{tag_label}</div>
-    <h2>{policy_title}</h2>
+    <div class="tag tag-orange">{tag_label}</div>
+    <h2>{headline}</h2>
     <p>Hello {username},</p>
     {body_html}
     {f"<p><strong>Effective Date:</strong> {effective_date}</p>" if effective_date else ""}
