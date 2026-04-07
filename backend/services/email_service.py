@@ -181,26 +181,18 @@ def send_email(to_email: str, subject: str, html_body: str, text_body: str = "",
     return False
 
 
-def send_admin_email(to_email: str, subject: str, html_body: str, text_body: str = "") -> bool:
-    """Send admin broadcast emails. Sends HTML directly without requiring templates."""
-    provider = (Config.EMAIL_PROVIDER or "brevo").strip().lower()
+def send_admin_email(to_email: str, subject: str, html_body: str, template_id: str = None, params: dict = None) -> bool:
+    """Send admin broadcast emails via Admin EmailJS account only."""
+    # Only use admin EmailJS for broadcasts
+    if not (Config.ADMIN_EMAILJS_SERVICE_ID and Config.ADMIN_EMAILJS_PUBLIC_KEY):
+        logger.error("Admin EmailJS not configured. Configure ADMIN_EMAILJS_SERVICE_ID and ADMIN_EMAILJS_PUBLIC_KEY.")
+        return False
     
-    # Priority list based on configured provider
-    provider_order = []
-    if provider == "sendgrid":
-        provider_order = ["sendgrid", "brevo"]
-    else:  # Default to Brevo
-        provider_order = ["brevo", "sendgrid"]
+    if not template_id:
+        logger.error("Admin email requires template_id to be set.")
+        return False
     
-    # Try each provider in order
-    for prov in provider_order:
-        if prov == "brevo" and _send_via_brevo(to_email, subject, html_body, text_body):
-            return True
-        elif prov == "sendgrid" and _send_via_sendgrid(to_email, subject, html_body, text_body):
-            return True
-    
-    logger.error(f"Admin email failed for {to_email}. Configure BREVO_API_KEY or SENDGRID_API_KEY.")
-    return False
+    return _send_via_admin_emailjs(to_email, subject, html_body, template_id, params)
 
 def send_otp_email(to_email: str, username: str, otp: str, expiry_minutes: int = 5) -> bool:
     html = f"""
@@ -247,7 +239,7 @@ def send_password_otp_email(to_email: str, username: str, otp: str):
     return send_otp_email(to_email, username, otp)
 
 def send_feature_announcement(to_email: str, username: str, subject: str, headline: str, body_html: str, features: list = None, cta_text: str = "Explore Now", cta_url: str = "", **kwargs) -> bool:
-    """Send a feature announcement email. Admin writes the message directly."""
+    """Send a feature announcement via Admin EmailJS."""
     html = f"<h2>🚀 {headline}</h2><p>Hi {username},</p>{body_html}"
     
     # Add features list if provided
@@ -265,10 +257,20 @@ def send_feature_announcement(to_email: str, username: str, subject: str, headli
     if cta_url and cta_text:
         html += f"<p><a href='{cta_url}' class='btn'>{cta_text}</a></p>"
     
-    return send_admin_email(to_email, subject, _base_template(html))
+    params = {
+        "to_email": to_email,
+        "to_name": username,
+        "subject": subject,
+        "headline": headline,
+        "body_html": body_html,
+        "features": str(features) if features else "",
+        "cta_text": cta_text,
+        "cta_url": cta_url
+    }
+    return send_admin_email(to_email, subject, _base_template(html), template_id=Config.ADMIN_EMAILJS_FEATURE_TEMPLATE_ID, params=params)
 
 def send_custom_email(to_email: str, username: str, subject: str, headline: str, body_html: str, tag_label: str = "", cta_text: str = "", cta_url: str = "", **kwargs) -> bool:
-    """Send a custom email. Admin writes the message directly."""
+    """Send a custom email via Admin EmailJS."""
     html = ""
     if tag_label:
         html += f"<div class='tag tag-orange'>{tag_label}</div>"
@@ -278,14 +280,24 @@ def send_custom_email(to_email: str, username: str, subject: str, headline: str,
     if cta_url and cta_text:
         html += f"<p><a href='{cta_url}' class='btn'>{cta_text}</a></p>"
     
-    return send_admin_email(to_email, subject, _base_template(html))
+    params = {
+        "to_email": to_email,
+        "to_name": username,
+        "subject": subject,
+        "headline": headline,
+        "body_html": body_html,
+        "tag_label": tag_label,
+        "cta_text": cta_text,
+        "cta_url": cta_url
+    }
+    return send_admin_email(to_email, subject, _base_template(html), template_id=Config.ADMIN_EMAILJS_CUSTOM_TEMPLATE_ID, params=params)
 
 def send_feedback_reply(to_email: str, username: str, original_feedback: str, reply_text: str):
     html = f"<h2>Feedback Response</h2><p>Hello {username},</p><p>We have a response to your feedback:</p><p style='font-style:italic;color:#666'>\"{original_feedback}\"</p><hr><p>{reply_text}</p>"
     return send_email(to_email, "Re: Your feedback - LintVertex", _base_template(html))
 
 def send_policy_notice(to_email: str, username: str, subject: str, headline: str, body_html: str, effective_date: str = "", tag_label: str = "Policy Update", **kwargs) -> bool:
-    """Send a formal policy notice. Admin writes the message directly."""
+    """Send a policy notice via Admin EmailJS."""
     html = f"""
     <div class="tag tag-orange">{tag_label}</div>
     <h2>{headline}</h2>
@@ -294,4 +306,14 @@ def send_policy_notice(to_email: str, username: str, subject: str, headline: str
     {f"<p><strong>Effective Date:</strong> {effective_date}</p>" if effective_date else ""}
     <p style='margin-top:20px'>Thank you for using LintVertex.<br>The LintVertex Team</p>
     """
-    return send_admin_email(to_email, subject, _base_template(html))
+    
+    params = {
+        "to_email": to_email,
+        "to_name": username,
+        "subject": subject,
+        "headline": headline,
+        "body_html": body_html,
+        "effective_date": effective_date,
+        "tag_label": tag_label
+    }
+    return send_admin_email(to_email, subject, _base_template(html), template_id=Config.ADMIN_EMAILJS_POLICY_TEMPLATE_ID, params=params)
