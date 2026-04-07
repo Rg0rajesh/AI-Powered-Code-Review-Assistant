@@ -43,61 +43,164 @@ def _base_template(content: str) -> str:
 </html>
 """
 
-def send_email(to_email: str, subject: str, html_body: str, text_body: str = "", template_id: str = None, params: dict = None) -> bool:
-    """Generic send function with EmailJS priority and SMTP fallback."""
-    # ── Try EmailJS ───────────────────────────────────────────
-    if Config.EMAILJS_SERVICE_ID and Config.EMAILJS_PUBLIC_KEY and template_id:
-        try:
-            url = "https://api.emailjs.com/api/v1.0/email/send"
-            payload = {
-                "service_id": Config.EMAILJS_SERVICE_ID,
-                "template_id": template_id,
-                "user_id": Config.EMAILJS_PUBLIC_KEY,
-                "template_params": params or {
-                    "to_email": to_email,
-                    "to_name": to_email.split('@')[0],
-                    "subject": subject,
-                    "message_html": html_body
-                }
-            }
-            if Config.EMAILJS_PRIVATE_KEY:
-                payload["accessToken"] = Config.EMAILJS_PRIVATE_KEY
-                
-            resp = requests.post(url, json=payload, timeout=10)
-            if resp.status_code == 200:
-                logger.info(f"Email sent via EmailJS to {to_email}")
-                return True
-            logger.error(f"EmailJS error ({resp.status_code}): {resp.text}")
-        except Exception as e:
-            logger.error(f"EmailJS exception: {e}")
-
-    # ── Fallback: SMTP ────────────────────────────────────────
-    if not Config.SMTP_USER or not Config.SMTP_PASSWORD:
-        logger.warning(f"SMTP not configured. Logged to console: {to_email} | {subject}")
+def _send_via_brevo(to_email: str, subject: str, html_body: str, text_body: str = "") -> bool:
+    """Send via Brevo API (300 emails/day free)."""
+    if not Config.BREVO_API_KEY:
         return False
-        
     try:
-        msg = MIMEMultipart("alternative")
-        msg["Subject"] = subject
-        msg["From"] = formataddr((Config.SMTP_FROM_NAME, Config.SMTP_FROM or Config.SMTP_USER))
-        msg["To"] = to_email
-        if text_body: msg.attach(MIMEText(text_body, "plain"))
-        msg.attach(MIMEText(html_body, "html"))
+        url = "https://api.brevo.com/v3/smtp/email"
+        headers = {
+            "accept": "application/json",
+            "api-key": Config.BREVO_API_KEY,
+            "content-type": "application/json"
+        }
+        payload = {
+            "sender": {"name": Config.BREVO_FROM_NAME, "email": Config.BREVO_FROM_EMAIL},
+            "to": [{"email": to_email}],
+            "subject": subject,
+            "htmlContent": html_body
+        }
+        if text_body:
+            payload["textContent"] = text_body
         
-        if Config.SMTP_USE_SSL:
-            with smtplib.SMTP_SSL(Config.SMTP_HOST, Config.SMTP_PORT) as server:
-                server.login(Config.SMTP_USER, Config.SMTP_PASSWORD)
-                server.sendmail(Config.SMTP_FROM or Config.SMTP_USER, to_email, msg.as_string())
-        else:
-            with smtplib.SMTP(Config.SMTP_HOST, Config.SMTP_PORT) as server:
-                if Config.SMTP_USE_TLS: server.starttls()
-                server.login(Config.SMTP_USER, Config.SMTP_PASSWORD)
-                server.sendmail(Config.SMTP_FROM or Config.SMTP_USER, to_email, msg.as_string())
-        logger.info(f"Email sent via SMTP to {to_email}")
-        return True
-    except Exception as e:
-        logger.error(f"SMTP error: {e}")
+        resp = requests.post(url, json=payload, headers=headers, timeout=15)
+        if resp.status_code == 201:
+            logger.info(f"Email sent via Brevo to {to_email}")
+            return True
+        logger.error(f"Brevo error ({resp.status_code}): {resp.text}")
         return False
+    except Exception as e:
+        logger.error(f"Brevo exception: {e}")
+        return False
+
+
+def _send_via_sendgrid(to_email: str, subject: str, html_body: str, text_body: str = "") -> bool:
+    """Send via SendGrid API (100 emails/day free)."""
+    if not Config.SENDGRID_API_KEY:
+        return False
+    try:
+        url = "https://api.sendgrid.com/v3/mail/send"
+        headers = {
+            "Authorization": f"Bearer {Config.SENDGRID_API_KEY}",
+            "Content-Type": "application/json"
+        }
+        payload = {
+            "personalizations": [{"to": [{"email": to_email}], "subject": subject}],
+            "from": {"email": Config.SENDGRID_FROM_EMAIL, "name": Config.SENDGRID_FROM_NAME},
+            "content": [{"type": "text/html", "value": html_body}]
+        }
+        if text_body:
+            payload["content"].append({"type": "text/plain", "value": text_body})
+        
+        resp = requests.post(url, json=payload, headers=headers, timeout=15)
+        if resp.status_code == 202:
+            logger.info(f"Email sent via SendGrid to {to_email}")
+            return True
+        logger.error(f"SendGrid error ({resp.status_code}): {resp.text}")
+        return False
+    except Exception as e:
+        logger.error(f"SendGrid exception: {e}")
+        return False
+
+
+def _send_via_emailjs(to_email: str, subject: str, html_body: str, template_id: str = None, params: dict = None) -> bool:
+    """Send via EmailJS (template-based, user emails like OTP/welcome)."""
+    if not (Config.EMAILJS_SERVICE_ID and Config.EMAILJS_PUBLIC_KEY and template_id):
+        return False
+    try:
+        url = "https://api.emailjs.com/api/v1.0/email/send"
+        payload = {
+            "service_id": Config.EMAILJS_SERVICE_ID,
+            "template_id": template_id,
+            "user_id": Config.EMAILJS_PUBLIC_KEY,
+            "template_params": params or {"to_email": to_email, "to_name": to_email.split('@')[0], "subject": subject}
+        }
+        if Config.EMAILJS_PRIVATE_KEY:
+            payload["accessToken"] = Config.EMAILJS_PRIVATE_KEY
+        
+        resp = requests.post(url, json=payload, timeout=15)
+        if resp.status_code == 200:
+            logger.info(f"Email sent via EmailJS (user) to {to_email}")
+            return True
+        logger.error(f"EmailJS error ({resp.status_code}): {resp.text}")
+        return False
+    except Exception as e:
+        logger.error(f"EmailJS exception: {e}")
+        return False
+
+
+def _send_via_admin_emailjs(to_email: str, subject: str, html_body: str, template_id: str = None, params: dict = None) -> bool:
+    """Send via Admin EmailJS (separate account for admin broadcasts)."""
+    if not (Config.ADMIN_EMAILJS_SERVICE_ID and Config.ADMIN_EMAILJS_PUBLIC_KEY and template_id):
+        return False
+    try:
+        url = "https://api.emailjs.com/api/v1.0/email/send"
+        payload = {
+            "service_id": Config.ADMIN_EMAILJS_SERVICE_ID,
+            "template_id": template_id,
+            "user_id": Config.ADMIN_EMAILJS_PUBLIC_KEY,
+            "template_params": params or {"to_email": to_email, "to_name": to_email.split('@')[0], "subject": subject}
+        }
+        if Config.ADMIN_EMAILJS_PRIVATE_KEY:
+            payload["accessToken"] = Config.ADMIN_EMAILJS_PRIVATE_KEY
+        
+        resp = requests.post(url, json=payload, timeout=15)
+        if resp.status_code == 200:
+            logger.info(f"Email sent via EmailJS (admin) to {to_email}")
+            return True
+        logger.error(f"Admin EmailJS error ({resp.status_code}): {resp.text}")
+        return False
+    except Exception as e:
+        logger.error(f"Admin EmailJS exception: {e}")
+        return False
+
+
+def send_email(to_email: str, subject: str, html_body: str, text_body: str = "", template_id: str = None, params: dict = None) -> bool:
+    """Send email with provider fallback (Brevo → SendGrid → EmailJS). SMTP disabled on Render."""
+    provider = (Config.EMAIL_PROVIDER or "brevo").strip().lower()
+    
+    # Priority list based on configured provider
+    provider_order = []
+    if provider == "sendgrid":
+        provider_order = ["sendgrid", "brevo", "emailjs"]
+    elif provider == "emailjs":
+        provider_order = ["emailjs", "brevo", "sendgrid"]
+    else:  # Default to Brevo
+        provider_order = ["brevo", "sendgrid", "emailjs"]
+    
+    # Try each provider in order
+    for prov in provider_order:
+        if prov == "brevo" and _send_via_brevo(to_email, subject, html_body, text_body):
+            return True
+        elif prov == "sendgrid" and _send_via_sendgrid(to_email, subject, html_body, text_body):
+            return True
+        elif prov == "emailjs" and _send_via_emailjs(to_email, subject, html_body, template_id, params):
+            return True
+    
+    logger.error(f"All email providers failed for {to_email}. Configure BREVO_API_KEY, SENDGRID_API_KEY, or EMAILJS credentials.")
+    return False
+
+
+def send_admin_email(to_email: str, subject: str, html_body: str, text_body: str = "") -> bool:
+    """Send admin broadcast emails. Sends HTML directly without requiring templates."""
+    provider = (Config.EMAIL_PROVIDER or "brevo").strip().lower()
+    
+    # Priority list based on configured provider
+    provider_order = []
+    if provider == "sendgrid":
+        provider_order = ["sendgrid", "brevo"]
+    else:  # Default to Brevo
+        provider_order = ["brevo", "sendgrid"]
+    
+    # Try each provider in order
+    for prov in provider_order:
+        if prov == "brevo" and _send_via_brevo(to_email, subject, html_body, text_body):
+            return True
+        elif prov == "sendgrid" and _send_via_sendgrid(to_email, subject, html_body, text_body):
+            return True
+    
+    logger.error(f"Admin email failed for {to_email}. Configure BREVO_API_KEY or SENDGRID_API_KEY.")
+    return False
 
 def send_otp_email(to_email: str, username: str, otp: str, expiry_minutes: int = 5) -> bool:
     html = f"""
@@ -144,7 +247,7 @@ def send_password_otp_email(to_email: str, username: str, otp: str):
     return send_otp_email(to_email, username, otp)
 
 def send_feature_announcement(to_email: str, username: str, subject: str, headline: str, body_html: str, features: list = None, cta_text: str = "Explore Now", cta_url: str = "", **kwargs) -> bool:
-    """Send a feature announcement email with optional features list and CTA."""
+    """Send a feature announcement email. Admin writes the message directly."""
     html = f"<h2>🚀 {headline}</h2><p>Hi {username},</p>{body_html}"
     
     # Add features list if provided
@@ -162,10 +265,10 @@ def send_feature_announcement(to_email: str, username: str, subject: str, headli
     if cta_url and cta_text:
         html += f"<p><a href='{cta_url}' class='btn'>{cta_text}</a></p>"
     
-    return send_email(to_email, subject, _base_template(html))
+    return send_admin_email(to_email, subject, _base_template(html))
 
 def send_custom_email(to_email: str, username: str, subject: str, headline: str, body_html: str, tag_label: str = "", cta_text: str = "", cta_url: str = "", **kwargs) -> bool:
-    """Send a custom email with optional tag and CTA."""
+    """Send a custom email. Admin writes the message directly."""
     html = ""
     if tag_label:
         html += f"<div class='tag tag-orange'>{tag_label}</div>"
@@ -175,14 +278,14 @@ def send_custom_email(to_email: str, username: str, subject: str, headline: str,
     if cta_url and cta_text:
         html += f"<p><a href='{cta_url}' class='btn'>{cta_text}</a></p>"
     
-    return send_email(to_email, subject, _base_template(html))
+    return send_admin_email(to_email, subject, _base_template(html))
 
 def send_feedback_reply(to_email: str, username: str, original_feedback: str, reply_text: str):
     html = f"<h2>Feedback Response</h2><p>Hello {username},</p><p>We have a response to your feedback:</p><p style='font-style:italic;color:#666'>\"{original_feedback}\"</p><hr><p>{reply_text}</p>"
     return send_email(to_email, "Re: Your feedback - LintVertex", _base_template(html))
 
 def send_policy_notice(to_email: str, username: str, subject: str, headline: str, body_html: str, effective_date: str = "", tag_label: str = "Policy Update", **kwargs) -> bool:
-    """Send a formal policy notice (like terms changes) to users."""
+    """Send a formal policy notice. Admin writes the message directly."""
     html = f"""
     <div class="tag tag-orange">{tag_label}</div>
     <h2>{headline}</h2>
@@ -191,4 +294,4 @@ def send_policy_notice(to_email: str, username: str, subject: str, headline: str
     {f"<p><strong>Effective Date:</strong> {effective_date}</p>" if effective_date else ""}
     <p style='margin-top:20px'>Thank you for using LintVertex.<br>The LintVertex Team</p>
     """
-    return send_email(to_email, subject, _base_template(html))
+    return send_admin_email(to_email, subject, _base_template(html))

@@ -59,3 +59,11 @@ class Config:
     EMAILJS_OTP_TEMPLATE_ID     = os.getenv("EMAILJS_OTP_TEMPLATE_ID", "template_otp")
     EMAILJS_CHANGED_TEMPLATE_ID = os.getenv("EMAILJS_CHANGED_TEMPLATE_ID", "template_pwd_changed")
     EMAILJS_WELCOME_TEMPLATE_ID = os.getenv("EMAILJS_WELCOME_TEMPLATE_ID", "template_welcome")
+
+    # EmailJS Admin (separate account for admin broadcasts)
+    ADMIN_EMAILJS_SERVICE_ID    = os.getenv("ADMIN_EMAILJS_SERVICE_ID", "")
+    ADMIN_EMAILJS_PUBLIC_KEY    = os.getenv("ADMIN_EMAILJS_PUBLIC_KEY", "")
+    ADMIN_EMAILJS_PRIVATE_KEY   = os.getenv("ADMIN_EMAILJS_PRIVATE_KEY", "")
+    ADMIN_EMAILJS_FEATURE_TEMPLATE_ID = os.getenv("ADMIN_EMAILJS_FEATURE_TEMPLATE_ID", "template_feature_announcement")
+    ADMIN_EMAILJS_POLICY_TEMPLATE_ID  = os.getenv("ADMIN_EMAILJS_POLICY_TEMPLATE_ID", "template_policy_notice")
+    ADMIN_EMAILJS_CUSTOM_TEMPLATE_ID  = os.getenv("ADMIN_EMAILJS_CUSTOM_TEMPLATE_ID", "template_custom_email")
