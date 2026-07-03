@@ -1,5 +1,5 @@
 # 🔍 LintVertex — AI-Powered Code Review SaaS
-
+#### Disclaimer: **email servies and otp services**not work  due to for **Render new polices**
 Premium code review platform powered by **Gemini AI**, **ML models**, and **real-time team collaboration** via SSE.
 
 ---
