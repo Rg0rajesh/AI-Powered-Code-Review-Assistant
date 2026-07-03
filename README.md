@@ -8,7 +8,7 @@ Premium code review platform powered by **Gemini AI**, **ML models**, and **real
 
 | Feature | Details |
 |---|---|
-| 🤖 AI Analysis | Gemini 1.5 Flash primary · Ollama local fallback |
+| 🤖 AI Analysis | Gemini 2.5 Flash primary · Ollama local fallback |
 | 🧠 ML Scoring | Random Forest + rule-based quality scoring (0–100, A–F) |
 | 🔍 Auto-Detect | Python · Java · C · C++ — rule-based + ML hybrid |
 | 💬 Discussion Rooms | SSE real-time · Human-only · Room key sharing |
@@ -170,7 +170,3 @@ lintvertex/
 
 ---
 
-## 📜 License
-
-MIT License — built for LintVertex SaaS platform.
-# Lintvertex
